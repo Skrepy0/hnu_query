@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hnu_query"
+version = "0.1.0"
+description = "湖南大学校内系统查询库，将湖南大学的校内系统（如个人门户，教务系统等）的接口进行包装，提供一套获取结构化数据的能力。"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Skrepy", email = "skrepy@hnu.edu.cn" }]
+keywords = ["HNU", "query"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+dependencies = [
+    "endesive>=2.19.3",
+    "httpx>=0.28.1",
+    "pydantic>=2.13.5",
+    "requests>=2.28",
+    "respx>=0.23.1",
+    "selectolax>=0.4.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/Skrepy0/hnu_query"
+Issues = "https://github.com/Skrepy0/hnu_query/issues"
+
+[project.scripts]
+hnu_query-cli = "hnu_query.cli:main"    # 可选：安装后提供命令行工具
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+markers = [
+    "asyncio: mark test as async (provided by pytest-asyncio)",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.2.0",
+]
