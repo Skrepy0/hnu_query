@@ -1,7 +1,7 @@
 import httpx
 
+from .exceptions import CaNetworkError, CaStatusError
 from .token import CaToken
-from .exceptions import CaError, CaNetworkError, CaStatusError
 
 BASE_URL = "https://ca.hnu.edu.cn"
 _TIMEOUT = httpx.Timeout(60.0)
@@ -18,10 +18,10 @@ class CaClient:
     """
 
     def __init__(
-        self,
-        token: CaToken,
-        *,
-        client: httpx.AsyncClient | None = None,
+            self,
+            token: CaToken,
+            *,
+            client: httpx.AsyncClient | None = None,
     ) -> None:
         self._token = token
         self._client = client or httpx.AsyncClient(

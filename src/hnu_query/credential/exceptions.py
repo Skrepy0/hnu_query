@@ -1,6 +1,3 @@
-# src/hnu_query/ca/exceptions.py
-
-
 class CaError(Exception):
     """可信电子凭证模块基础异常。"""
 

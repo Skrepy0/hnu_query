@@ -1,13 +1,39 @@
-# tests/conftest.py
 import pytest
 
+from hnu_query.cas import CasToken
 from hnu_query.credential import CaToken
+
+CAS_BASE = "http://cas.hnu.edu.cn"
+PUBKEY_URL = f"{CAS_BASE}/cas/v2/getPubKey"
+SERVICE_URL = (
+    f"{CAS_BASE}/cas/login"
+    "?service=http://cas.hnu.edu.cn/system/login/login.zf"
+)
 
 
 @pytest.fixture
 def ca_token() -> CaToken:
     """一个携带伪造 Cookie 的 CaToken。"""
     return CaToken(headers={"Cookie": "JSESSIONID=test-session-id"})
+
+
+@pytest.fixture
+def cas_token() -> CasToken:
+    """一个持伪造 Cookie 的 CasToken。"""
+    return CasToken(
+        cookie="TGC=tgt-fake; JSESSIONID=js-fake",
+        stu_id="20210001",
+    )
+
+
+@pytest.fixture
+def pubkey_url() -> str:
+    return PUBKEY_URL
+
+
+@pytest.fixture
+def service_url() -> str:
+    return SERVICE_URL
 
 
 @pytest.fixture

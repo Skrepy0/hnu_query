@@ -1,4 +1,3 @@
-# tests/ca/test_token.py
 from hnu_query.credential import CaToken
 
 
