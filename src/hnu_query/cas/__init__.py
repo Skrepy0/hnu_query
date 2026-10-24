@@ -12,7 +12,7 @@ from .exceptions import (
 )
 from .login import acquire_by_login
 from .tfa import TFAToken
-from .ticket import get_ticket_url, extract_ticket
+from .ticket import get_ticket_url, extract_ticket, get_sticket
 from .token import CasToken
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "TFAToken",
     "get_ticket_url",
     "extract_ticket",
+    "get_sticket",
     "CasError",
     "CasNetworkError",
     "CasStatusError",
