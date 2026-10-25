@@ -26,7 +26,6 @@ async with CgClient(token) as client:
 无课程、作业或题目时返回 `None`。`problem.index` 是作业内题目序号，获取页面应使用它；
 `problem.id` 是题目 ID。`get_problem_page` 返回完整 HTML。
 
-查询会切换服务端课程上下文，同一会话应按课程顺序查询，避免并发切换课程。
+查询会切换服务端课程上下文，同一会话应按课程顺序查询。
 验证码错误时重新创建 `CgSession` 获取图片，库不自动识别或重试登录。
-登录业务异常包括 `PasswordError`、`CaptchaError`、`LoginFailed`；未知错误码可通过 `LoginFailed.code` 获取。
-查询重定向到登录页时抛出 `TokenExpired`。其他异常及跳转限制见 [维护说明](../porting.md)。
+密码和验证码错误分别抛出 `PasswordError`、`CaptchaError`，会话失效抛出 `TokenExpired`。

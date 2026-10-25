@@ -1,8 +1,8 @@
 # HNU Query（Python）
 
-湖南大学校内系统异步查询库，从 Rust 项目 [qnxg/hnu_query](https://github.com/qnxg/hnu_query) 逐模块移植到 Python，使用 httpx 和 Pydantic。
+湖南大学校内系统异步查询库，由 Rust 项目 [qnxg/hnu_query](https://github.com/qnxg/hnu_query) 移植而来。
 
-支持教务、体测、实验平台、校园网流量、门户、学工、研究生系统、CG、AI 平台和宿舍电量等查询。移植与差异审计进度见 [移植进度](docs/migration.md)。
+支持教务、体测、实验平台、校园网流量、门户、学工、研究生系统、CG、AI 平台和宿舍电量等查询。
 
 ## 安装
 
@@ -12,7 +12,7 @@
 pip install -e .
 ```
 
-真实查询需要湖南大学校园网或 VPN，以及相应系统账号。
+真实查询需连接湖南大学校园网或 VPN，并拥有相应系统权限。
 
 ## 快速开始
 
@@ -42,16 +42,17 @@ asyncio.run(main())
 
 - [使用指南与模块目录](docs/README.md)
 - [登录、异常处理与通用用法](docs/usage.md)
-- [移植进度](docs/migration.md) · [开发与维护](docs/porting.md)
+- [字段约定](docs/fields.md) · [测试方法](docs/test.md)
 
 ## 开发
 
 ```bash
-uv sync --extra dev
-uv run pytest
+uv sync
+uv run poe check
 ```
 
-自动化测试使用离线样本和模拟 HTTP 响应，真实验证进度见 [校园网联调](docs/live-check.md)。
+包含 lint、格式、类型检查和离线测试，详见 [测试方法](docs/test.md)。
+真实请求测试通过 `.env` 配置，运行 `uv run --env-file .env poe test-live`。
 
 ## 许可证
 
