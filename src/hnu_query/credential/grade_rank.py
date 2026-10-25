@@ -1,7 +1,8 @@
 from hnu_query.credential.file import file, preview_file
 from hnu_query.credential.token import CaToken
+
 from .models import Rank
-from .parse import preview_file_name, parse_rank
+from .parse import parse_rank, preview_file_name
 
 UNDERGRADUATE_MAJOR_ALL_TEMPLATE_ID = "02a70e11bc89b40dc2ef6ed14851ce25"
 

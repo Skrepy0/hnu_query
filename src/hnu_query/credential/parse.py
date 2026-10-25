@@ -4,6 +4,7 @@ import json
 import re
 
 from hnu_query.credential.exceptions import CaParseError
+
 from .models import Rank
 
 #: 与 Rust 完全一致的正则
@@ -41,14 +42,16 @@ def preview_file_name(json_str: str) -> str:
     try:
         data = json.loads(json_str)
     except ValueError as e:
-        raise CaParseError(f"preview_file 返回非 JSON: {json_str[:200]}") from e
+        raise CaParseError("preview_file 返回非 JSON") from e
 
-    if data.get("code") != 200:
-        raise CaParseError(f"无法解析响应代码: {json_str[:200]}")
+    if not isinstance(data, dict):
+        raise CaParseError("preview_file 响应不是对象")
+    if type(data.get("code")) is not int or data["code"] != 200:
+        raise CaParseError("无法解析响应代码")
 
     message = data.get("message")
-    if not message:
-        raise CaParseError(f"无法解析文件名: {json_str[:200]}")
+    if not isinstance(message, str):
+        raise CaParseError("无法解析文件名")
 
     return message
 
@@ -83,7 +86,7 @@ def _parse_rank_from_text(pdf_text: str) -> Rank:
     """
     m = _RANK_RE.search(pdf_text)
     if not m:
-        raise CaParseError(f"正则匹配失败: {pdf_text[:200]}")
+        raise CaParseError("正则匹配失败")
 
     # 12 个捕获组，顺序和 Rust 完全一致
     (

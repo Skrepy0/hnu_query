@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
 class CasToken:
     """统一身份认证系统的令牌。"""
-    cookie: str
+
+    cookie: str = field(repr=False)
     stu_id: str
 
     @classmethod

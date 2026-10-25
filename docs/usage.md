@@ -19,12 +19,17 @@ cas_token = await acquire_by_login(input("学号："), getpass.getpass("个人�
 完整结构见项目首页。除另有说明，模块示例中的 `cas_token` 来自上述登录。
 
 CAS 登录可能抛出 `PasswordError`、`AccountLocked`、`PasswordShouldChange` 或 `TFARequired`，
-这些异常从 `hnu_query.cas` 导入。双因子验证流程如下：
+这些异常从 `hnu_query.cas` 导入。网络错误为 `CasNetworkError`，公钥解析或加密失败为 `CasParseError`，
+异常 HTTP 状态为 `CasStatusError`，不完整登录响应为 `CasLoginError`。双因子验证流程如下：
 
 1. 捕获 `TFARequired`，读取异常对象的 `tfa_token`。
 2. 调用 `await tfa_token.send_sms()` 发送验证码。
 3. 调用 `status, token = await tfa_token.verify(code)` 验证。
 4. `success` 表示成功，可使用返回的 CAS 令牌；`code_error` 表示验证码错误；`expired` 表示验证会话过期，需重新登录。
+
+验证码错误时，后续操作应使用返回的新 `TFAToken`，其中包含更新后的 `execution`。
+`send_sms()` 返回 `success`、`valid` 或其他服务端原文；`valid` 表示已有验证码仍有效。
+验证码验证仅在 HTTP 302 时返回成功，HTTP 4xx/5xx 抛出 `CasStatusError`，不会伪装成会话过期。
 
 令牌包含会话凭据，不要提交到代码仓库或输出到日志。
 

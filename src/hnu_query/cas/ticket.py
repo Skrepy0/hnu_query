@@ -2,11 +2,10 @@ from urllib.parse import parse_qs, urljoin, urlsplit
 
 import httpx
 
-from ..utils.cookie import cookie_parser
 from .exceptions import CasNetworkError, CasStatusError, TokenExpired
 from .token import CasToken
 
-REDIRECT_CODES = (301, 302, 303, 307, 308)
+REDIRECT_CODES = (302,)
 
 
 async def get_ticket_url(cas_token: CasToken, service_url: str) -> str:
@@ -53,21 +52,17 @@ def extract_ticket(ticket_url: str) -> str:
 
 
 async def get_sticket(cas_token: CasToken, service_url: str) -> tuple[str, str]:
-    """最多经过六次 CAS 跳转，返回 ``(s_ticket, 合并后的 Cookie)``。
+    """最多经过六次 CAS 跳转，返回 ``(s_ticket, 回调路径适用的 Cookie)``。
 
     对应 Rust ``CasToken::get_sticket``，用于体测等应用的 SSO。
     """
     current = service_url
-    cookies = {}
-    for item in cas_token.cookie.split(";"):
-        if "=" in item:
-            key, value = item.strip().split("=", 1)
-            cookies[key] = value
-
-    def cookie_header():
-        return "; ".join(f"{key}={value}" for key, value in cookies.items())
-
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
+        # CAS 与门户都使用 JSESSIONID，但 Path 不同，不能只按名称覆盖。
+        for item in cas_token.cookie.split(";"):
+            if "=" in item:
+                key, value = item.strip().split("=", 1)
+                client.cookies.set(key, value, domain="cas.hnu.edu.cn", path="/")
         for attempt in range(7):
             parsed = urlsplit(current)
             if parsed.hostname != "cas.hnu.edu.cn" or parsed.scheme not in (
@@ -79,13 +74,12 @@ async def get_sticket(cas_token: CasToken, service_url: str) -> tuple[str, str]:
                 ticket = parse_qs(parsed.query).get("s_ticket", [""])[0]
                 if not ticket:
                     raise CasStatusError(302, "CAS 回调缺少 s_ticket")
-                return ticket, cookie_header()
+                callback = client.build_request("GET", current)
+                return ticket, callback.headers.get("cookie", "")
             if attempt == 6:
                 break
             try:
-                response = await client.get(
-                    current, headers={"Cookie": cookie_header()}
-                )
+                response = await client.get(current)
             except httpx.RequestError as exc:
                 raise CasNetworkError("获取 s_ticket 时网络请求失败") from exc
             if response.status_code == 200:
@@ -95,8 +89,5 @@ async def get_sticket(cas_token: CasToken, service_url: str) -> tuple[str, str]:
             location = response.headers.get("location")
             if not location:
                 raise CasStatusError(302, "获取 s_ticket 时缺少 Location")
-            for item in cookie_parser(response.headers.get_list("set-cookie")):
-                key, value = item.split("=", 1)
-                cookies[key] = value
             current = urljoin(current, location)
     raise CasStatusError(302, "超过 s_ticket 重定向次数限制")

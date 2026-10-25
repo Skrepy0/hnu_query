@@ -2,7 +2,8 @@ import re
 
 import httpx
 
-from .exceptions import CasNetworkError, CasStatusError, CasLoginError
+from ..utils.cookie import cookie_parser
+from .exceptions import CasLoginError, CasNetworkError, CasStatusError
 from .token import CasToken
 
 CAS_BASE = "https://cas.hnu.edu.cn"
@@ -20,12 +21,12 @@ class TFAToken:
     """
 
     def __init__(
-            self,
-            phone: str,
-            execution: str,
-            cookie: str,
-            stu_id: str,
-            password: str,
+        self,
+        phone: str,
+        execution: str,
+        cookie: str,
+        stu_id: str,
+        password: str,
     ) -> None:
         self.phone = phone
         self.execution = execution
@@ -35,11 +36,11 @@ class TFAToken:
 
     @classmethod
     def from_html(
-            cls,
-            html: str,
-            cookie: str,
-            stu_id: str,
-            password: str,
+        cls,
+        html: str,
+        cookie: str,
+        stu_id: str,
+        password: str,
     ) -> "TFAToken":
         """从双因子认证界面的 HTML 中创建 TFAToken。
 
@@ -108,10 +109,17 @@ class TFAToken:
             except httpx.RequestError as e:
                 raise CasNetworkError(str(e)) from e
 
-        # 302 → 通过验证，合并 cookie 得到新的 CasToken
-        if r.status_code in (301, 302, 303, 307, 308):
+        if r.status_code >= 400:
+            raise CasStatusError(r.status_code)
+        # 与 Rust 一致，仅 302 表示验证通过；同名 Cookie 使用新值。
+        if r.status_code == 302:
             new_cookies = cookie_parser(r.headers.get_list("set-cookie"))
-            merged = f"{self.cookie}; {'; '.join(new_cookies)}" if new_cookies else self.cookie
+            cookies = {}
+            for item in [*self.cookie.split(";"), *new_cookies]:
+                if "=" in item:
+                    key, value = item.strip().split("=", 1)
+                    cookies[key] = value
+            merged = "; ".join(f"{key}={value}" for key, value in cookies.items())
             return ("success", CasToken.from_cookie_unchecked(merged, self.stu_id))
 
         html = r.text
@@ -120,6 +128,3 @@ class TFAToken:
             return ("code_error", new_tfa)
 
         return ("expired", None)
-
-
-from ..utils.cookie import cookie_parser  # noqa: E402

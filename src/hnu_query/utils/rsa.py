@@ -15,6 +15,8 @@ def rsa_encrypt(password: str, exponent: str, modulus: str) -> str | None:
         password_int = int.from_bytes(password.encode("utf-8"), "big")
         e_int = int(exponent, 16)
         m_int = int(modulus, 16)
+        if e_int < 0 or m_int <= 0:
+            return None
         result_int = pow(password_int, e_int, m_int)
         return format(result_int, "x").zfill(128)
     except (ValueError, TypeError):

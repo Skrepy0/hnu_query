@@ -65,3 +65,36 @@ async def test_sticket_network_failure(cas_token):
     respx.get(START).mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(CasNetworkError):
         await get_sticket(cas_token, START)
+
+
+@respx.mock
+async def test_sticket_keeps_portal_and_cas_session_paths_separate(cas_token):
+    login = "http://cas.hnu.edu.cn/cas/login?service=portal"
+    exchange = "http://cas.hnu.edu.cn/system/login/login.zf?ticket=ST-test"
+    respx.get(START).respond(
+        302,
+        headers={
+            "location": login,
+            "set-cookie": "JSESSIONID=portal; Path=/",
+        },
+    )
+    respx.get(login).respond(
+        302,
+        headers={
+            "location": exchange,
+            "set-cookie": "JSESSIONID=cas; Path=/cas",
+        },
+    )
+
+    def portal_session(request):
+        cookies = request.headers.get("cookie", "")
+        if "JSESSIONID=portal" in cookies and "JSESSIONID=cas" not in cookies:
+            return httpx.Response(302, headers={"location": CALLBACK})
+        return httpx.Response(302, headers={"location": "/system/login/main.zf"})
+
+    route = respx.get(exchange).mock(side_effect=portal_session)
+    respx.get("http://cas.hnu.edu.cn/system/login/main.zf").respond(200)
+    ticket, cookies = await get_sticket(cas_token, START)
+    assert ticket == "ST+test"
+    assert "JSESSIONID=portal" in cookies and "JSESSIONID=cas" not in cookies
+    assert route.call_count == 1

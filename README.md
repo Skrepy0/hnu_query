@@ -2,7 +2,7 @@
 
 湖南大学校内系统异步查询库，从 Rust 项目 [qnxg/hnu_query](https://github.com/qnxg/hnu_query) 逐模块移植到 Python，使用 httpx 和 Pydantic。
 
-支持教务、体测、实验平台、校园网流量、门户、学工、研究生系统、CG 和宿舍电量等查询。全量移植仍在进行，详见 [移植进度](docs/migration.md)。
+支持教务、体测、实验平台、校园网流量、门户、学工、研究生系统、CG、AI 平台和宿舍电量等查询。移植与差异审计进度见 [移植进度](docs/migration.md)。
 
 ## 安装
 
@@ -51,7 +51,7 @@ uv sync --extra dev
 uv run pytest
 ```
 
-测试使用离线样本和模拟 HTTP 响应，尚未进行真实校园网联调。
+自动化测试使用离线样本和模拟 HTTP 响应，真实验证进度见 [校园网联调](docs/live-check.md)。
 
 ## 许可证
 

@@ -16,7 +16,7 @@ class CaStatusError(CaError):
 
 
 class CaParseError(CaError):
-    """HTML 解析失败。"""
+    """JSON 或 PDF 解析失败。"""
 
 
 class CaLoginError(CaError):

@@ -1,72 +1,79 @@
+from urllib.parse import parse_qs, urlsplit
+
 import httpx
 
-from hnu_query.cas import extract_ticket, get_ticket_url
-from .exceptions import CaLoginError, CaNetworkError, CaStatusError
+from hnu_query.cas import CasToken, get_ticket_url
+
+from .client import CaClient
+from .exceptions import CaLoginError
 from .token import CaToken
 
 CA_URL = "http://cas.hnu.edu.cn/cas/login?service=https://ca.hnu.edu.cn/student/"
 
 
-async def acquire_by_cas_login(cas_token) -> CaToken:
-    """通过 CAS 换取 CA 平台的 X-Access-Token。
-
-    对应 Rust ``CaToken::acquire_by_cas_login``。
-    """
-    # ① 向 CAS 申请指向 CA 的 ticket_url
+async def acquire_by_cas_login(cas_token: CasToken) -> CaToken:
+    """使用 CAS 票据兑换凭证会话；保留预取响应的 Cookie。"""
     ticket_url = await get_ticket_url(cas_token, CA_URL)
+    try:
+        target = urlsplit(ticket_url)
+        if (
+            target.scheme != "https"
+            or target.hostname != "ca.hnu.edu.cn"
+            or target.port not in (None, 443)
+            or target.username is not None
+            or target.password is not None
+        ):
+            raise ValueError
+        tickets = parse_qs(target.query, keep_blank_values=True).get("ticket", [])
+        if len(tickets) != 1 or not tickets[0]:
+            raise ValueError
+        ticket = tickets[0]
+    except ValueError as exc:
+        raise CaLoginError("凭证回调地址或 ticket 无效") from exc
 
-    # ② 从 URL 里提取 ticket
-    ticket = extract_ticket(ticket_url)
-
-    # ③④ 同一个 client 完成「GET ticket_url → validateLogin」
-    #    这样 CA 下发的会话 Cookie 会自动带到 validateLogin
-    async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=30.0,
-    ) as client:
-        # ③ 访问 ticket_url，建立 CA 会话（CA 会 Set-Cookie）
-        try:
-            r = await client.get(ticket_url)
-        except httpx.RequestError as e:
-            raise CaNetworkError(str(e)) from e
-        if r.status_code >= 400:
-            raise CaStatusError(r.status_code, r.text[:200])
-
-        # ④ 用 ticket 换 X-Access-Token
-        validate_url = (
-            "https://ca.hnu.edu.cn/student/cas/client/validateLogin"
-            f"?ticket={ticket}%23%2F"
-            "&service=https:%2F%2Fca.hnu.edu.cn%2Fstudent%2F"
-        )
-        try:
-            resp = await client.get(validate_url)
-        except httpx.RequestError as e:
-            raise CaNetworkError(str(e)) from e
-
-    # 此时 client 已关闭，但 resp 内容还在
-    if resp.status_code >= 400:
-        raise CaStatusError(resp.status_code, resp.text[:200])
-
-    # CA 在 ticket 无效时返回 HTML 登录页，而不是 JSON —— 提前判断
-    content_type = resp.headers.get("content-type", "")
-    if "json" not in content_type.lower():
-        raise CaLoginError(
-            f"validateLogin 返回非 JSON（可能 ticket 失效）: {resp.text[:200]}"
-        )
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as http:
+        async with CaClient(CaToken(), client=http) as client:
+            # 仅跟随凭证域内的跳转，禁止向其他站点提交一次性票据。
+            await _login_get(client, ticket_url)
+            response = await _login_get(
+                client,
+                "https://ca.hnu.edu.cn/student/cas/client/validateLogin",
+                params={
+                    "ticket": ticket + "#/",
+                    "service": "https://ca.hnu.edu.cn/student/",
+                },
+            )
 
     try:
-        data = resp.json()
-    except ValueError as e:
-        raise CaLoginError(f"validateLogin 返回非 JSON: {resp.text[:200]}") from e
-
+        data = response.json()
+    except ValueError as exc:
+        raise CaLoginError("validateLogin 返回非 JSON") from exc
+    if not isinstance(data, dict):
+        raise CaLoginError("validateLogin 响应不是对象")
     if data.get("message") != "登录成功":
-        raise CaLoginError(f"登录失败: {data.get('message')}")
+        raise CaLoginError("登录失败")
+    result = data.get("result")
+    token = result.get("token") if isinstance(result, dict) else None
+    if (
+        not isinstance(token, str)
+        or not token
+        or ";" in token
+        or any(ord(char) < 33 or ord(char) > 126 for char in token)
+    ):
+        raise CaLoginError("找不到 token 或 token 无效")
+    return CaToken(
+        {
+            "X-Access-Token": token,
+            "Cookie": f"X-Access-Token={token}",
+        }
+    )
 
-    token = (data.get("result") or {}).get("token")
-    if not token:
-        raise CaLoginError(f"找不到 token: {resp.text[:200]}")
 
-    return CaToken(headers={
-        "X-Access-Token": token,
-        "Cookie": f"X-Access-Token={token}",
-    })
+async def _login_get(client: CaClient, url: str, **kwargs) -> httpx.Response:
+    # 与下载接口不同，票据兑换不能重定向到 CDN 或其他域。
+    return await client._request(
+        "GET",
+        url,
+        allowed_host="ca.hnu.edu.cn",
+        **kwargs,
+    )

@@ -12,6 +12,10 @@ class CasLoginError(CasError):
     """登陆失败"""
 
 
+class CasParseError(CasError):
+    """响应数据或公钥无法解析。"""
+
+
 class CasNetworkError(CasError):
     """网络层错误。"""
 

@@ -5,6 +5,7 @@ import respx
 from hnu_query.cas import acquire_by_login
 from hnu_query.cas.exceptions import (
     CasNetworkError,
+    CasParseError,
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
@@ -26,6 +27,7 @@ PUBKEY_JSON = '{"modulus": "00bf", "exponent": "10001"}'
 
 
 # ---------- 成功 ----------
+
 
 @pytest.mark.asyncio
 @respx.mock
@@ -64,15 +66,12 @@ async def test_login_success():
 
 # ---------- 密码错误 ----------
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_wrong_password():
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text=PUBKEY_JSON)
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
     respx.post(SERVICE_URL).mock(
         return_value=httpx.Response(200, text="<html>用户名或密码错误</html>")
     )
@@ -83,18 +82,13 @@ async def test_login_wrong_password():
 
 # ---------- 账号锁定 ----------
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_account_locked():
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text=PUBKEY_JSON)
-    )
-    respx.post(SERVICE_URL).mock(
-        return_value=httpx.Response(403, text="Forbidden")
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
+    respx.post(SERVICE_URL).mock(return_value=httpx.Response(403, text="Forbidden"))
 
     with pytest.raises(AccountLocked):
         await acquire_by_login("20210001", "password")
@@ -102,15 +96,12 @@ async def test_login_account_locked():
 
 # ---------- 需要改密码 ----------
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_password_should_change():
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text=PUBKEY_JSON)
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
     respx.post(SERVICE_URL).mock(
         return_value=httpx.Response(
             302,
@@ -127,6 +118,7 @@ async def test_login_password_should_change():
 
 # ---------- 需要双因子认证 ----------
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_tfa_required():
@@ -137,15 +129,9 @@ async def test_login_tfa_required():
         <input type="hidden" name="execution" value="tfa-exec-abc"/>
     </body></html>
     """
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text=PUBKEY_JSON)
-    )
-    respx.post(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=tfa_html)
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
+    respx.post(SERVICE_URL).mock(return_value=httpx.Response(200, text=tfa_html))
 
     with pytest.raises(TFARequired) as exc:
         await acquire_by_login("20210001", "password")
@@ -157,6 +143,7 @@ async def test_login_tfa_required():
 
 
 # ---------- 网络与状态码错误 ----------
+
 
 @pytest.mark.asyncio
 @respx.mock
@@ -170,9 +157,7 @@ async def test_login_initial_network_error():
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_initial_status_error():
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(500, text="Server Error")
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(500, text="Server Error"))
 
     with pytest.raises(CasStatusError):
         await acquire_by_login("20210001", "password")
@@ -181,14 +166,10 @@ async def test_login_initial_status_error():
 @pytest.mark.asyncio
 @respx.mock
 async def test_login_pubkey_invalid_json():
-    respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text="not json")
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text="not json"))
 
-    with pytest.raises(CasNetworkError, match="非 JSON"):
+    with pytest.raises(CasParseError, match="非 JSON"):
         await acquire_by_login("20210001", "password")
 
 
@@ -199,9 +180,7 @@ async def test_login_password_encrypted():
     route_login_page = respx.get(SERVICE_URL).mock(
         return_value=httpx.Response(200, text=LOGIN_HTML)
     )
-    respx.get(PUBKEY_URL).mock(
-        return_value=httpx.Response(200, text=PUBKEY_JSON)
-    )
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
     route_post = respx.post(SERVICE_URL).mock(
         return_value=httpx.Response(
             302,

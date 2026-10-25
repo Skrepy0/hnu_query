@@ -3,18 +3,20 @@ import re
 
 import httpx
 
+from ..utils.cookie import cookie_parser
+from ..utils.rsa import rsa_encrypt
 from .exceptions import (
+    AccountLocked,
+    CasLoginError,
     CasNetworkError,
+    CasParseError,
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
-    AccountLocked,
     TFARequired,
 )
 from .tfa import TFAToken
 from .token import CasToken
-from ..utils.cookie import cookie_parser
-from ..utils.rsa import rsa_encrypt
 
 PUBKEY_URL = "http://cas.hnu.edu.cn/cas/v2/getPubKey"
 SERVICE_URL = (
@@ -46,8 +48,8 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
         TFARequired: 需要双因子认证（异常携带 TFAToken）。
     """
     async with httpx.AsyncClient(
-            timeout=30.0,
-            follow_redirects=False,
+        timeout=30.0,
+        follow_redirects=False,
     ) as client:
         # ① GET SERVICE_URL，拿初始 cookie 和登录表单字段
         try:
@@ -79,17 +81,19 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
         try:
             pubkey = pubkey_res.json()
         except ValueError as e:
-            raise CasNetworkError(f"getPubKey 返回非 JSON: {pubkey_res.text[:200]}") from e
+            raise CasParseError("getPubKey 返回非 JSON") from e
 
+        if not isinstance(pubkey, dict):
+            raise CasParseError("getPubKey 响应不是对象")
         modulus = pubkey.get("modulus")
         exponent = pubkey.get("exponent")
-        if not modulus or not exponent:
-            raise CasNetworkError("无法解析 modulus 或 exponent")
+        if not isinstance(modulus, str) or not isinstance(exponent, str):
+            raise CasParseError("无法解析 modulus 或 exponent")
 
         # ③ RSA 加密密码
         encrypted = rsa_encrypt(password, exponent, modulus)
         if encrypted is None:
-            raise CasNetworkError("RSA encryption failed")
+            raise CasParseError("RSA encryption failed")
 
         # ④ POST 登录表单
         try:
@@ -110,6 +114,8 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
         # ⑤ 403 → 账号锁定
         if login.status_code == 403:
             raise AccountLocked("账号因多次输错密码被锁定")
+        if login.status_code not in (200, 302):
+            raise CasStatusError(login.status_code)
 
         # 保留 _pv0 cookie（后续请求要用）
         addition = [c for c in cookies if c.startswith("_pv0=")]
@@ -133,7 +139,7 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
             raise TFARequired(tfa)
 
         if not location:
-            raise CasNetworkError(f"无法获取 cas 响应的 location: {login_result[:200]}")
+            raise CasLoginError("无法获取 cas 响应的 location")
 
         if PASSWORD_SHOULD_CHANGE_PAT in location:
             raise PasswordShouldChange("请前往个人门户修改密码后重试")

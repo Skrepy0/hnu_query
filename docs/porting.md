@@ -5,6 +5,38 @@
 本文记录接口约定、兼容差异与离线验证方式，供维护者参考。
 行为基准为 Rust 上游 [qnxg/hnu_query](https://github.com/qnxg/hnu_query)。
 
+## CAS 与可信电子凭证差异审计
+
+已核对上游 `cas/login.rs`、`cas/tfa.rs`、`cas/utils.rs`、`ca/login.rs` 和 `ca/grade_rank` 的请求、模型及解析行为。
+
+- CAS 保留上游 HTTP 登录入口、原始 RSA 算法（UTF-8、十六进制、最少 128 位补零）、
+  表单字段缺失时的空值回退及 `_pv0` 保留逻辑。负指数、非正模数明确返回加密失败，不执行 Python 的负指数求逆。
+- `get_ticket_url` 与上游一致仅接受 302；200/4xx/5xx 保守地认为 CAS 失效。
+  `extract_ticket` 保留既有字符串截取行为，可能包含后续查询参数；凭证登录单独按 URL 参数解析票据。
+- 修正 TFA 的成功条件，仅 302 成功；4xx/5xx 抛 HTTP 异常，其他页面或跳转沿用过期判定。
+  验证码错误返回新的 `TFAToken`，保留新的 execution。Python 使用状态字符串和二元组代替 Rust 枚举；
+  短信发送保留 `success`、`valid` 或其他原文。Python 不像 Rust 一样消费令牌对象，调用方应使用返回的新令牌。
+- TFA 成功后同名 Cookie 以新值替换，避免继续发送旧 TGC。`get_sticket` 使用 CookieJar 按域和路径管理，
+  保留 `/` 和 `/cas` 的不同 JSESSIONID，防止覆盖门户会话；回调只导出适用路径的 Cookie。
+  支持相对跳转、URL 编码和第一个查询参数中的 s_ticket；最多六次请求后允许解析最终回调。
+  这些是相对 Rust 拼接 Cookie 和字符串解析的有意差异。
+- CAS 新增 `CasParseError` 区分公钥/加密错误，原先此类错误被归入 `CasNetworkError`；
+  调用方捕获公钥错误时需调整异常类型。缺失登录 Location 使用 `CasLoginError`。
+  POST 的异常 HTTP 状态（403 账号锁定除外）显式抛 `CasStatusError`，不返回伪成功令牌。
+- 凭证登录保留票据预取与 validateLogin 两步流程，复用 CookieJar；仅接受凭证 HTTPS 域内跳转。
+  URL 参数方式提交解码后的 ticket 加 `#/`，避免后续查询参数、片段或编码影响换票。
+  JSON 无论 Content-Type 是否标注正确均按内容解析，非法对象、result 或 token 统一抛 `CaLoginError`。
+- 凭证的预览参数、固定本科主修模板及十二个排名字段与 Rust 一致；预览 code 必须为整数 200，
+  message 必须为字符串（包括空字符串），非法结构统一抛 `CaParseError`。
+  PDF 使用 pdfplumber 提取文本，正则及字段映射保持一致；离线样本不含原始 PDF，2026-10-25 已通过一次真实成绩凭证 PDF 的下载与排名解析。
+- 保留 Python 的 `credential` 模块名、文件函数和 `CaClient` 扩展接口；客户端与模块文件函数共用请求逻辑。
+  注入连接也带认证头，不依赖其 base_url，且由调用方关闭。
+  下载保留 Python 的重定向支持（最多十次，仅 HTTPS），跨域时剥离凭证认证头；
+  CAS 登录跳转抛 `CaLoginError`，401/403 保留既有 `CaStatusError`。
+- CAS 与凭证令牌的 repr 隐藏会话凭据。两份上游样本分别保存在 `tests/cas/fixtures` 和
+  `tests/credential/fixtures`，不依赖本地 Rust 目录运行；新增回归覆盖状态码、请求体、URL 编码、
+  Cookie 替换、认证头、CDN 跳转、严格 JSON 类型、错误 PDF、完整排名字段及连接所有权。
+
 ## 教务实现约定
 
 - `HdjwToken.headers` 是不可变副本；repr 不输出 Cookie。
@@ -22,7 +54,7 @@
 ## 体测实现约定
 
 - 提供不可变 `GymToken`、可复用连接的 `GymClient` 和与 Rust 同名的模块函数。
-- 支持 CAS `s_ticket` 登录和体测账号密码直接登录。CAS 跳转最多六次，合并同名 Cookie，
+- 支持 CAS `s_ticket` 登录和体测账号密码直接登录。CAS 跳转最多六次，按域和路径管理 Cookie，
   支持相对 Location 与 URL 编码的票据；CAS Cookie 只发往 CAS 域。
 - 预约先获取列表，再按 `class_id`、`class_time`、`test_time` 逐项查询详情，保留列表顺序。
 - 成绩并发请求摘要和详情；请求失败或任务被取消时，先取消并等待另一个请求结束。
@@ -183,6 +215,24 @@
 - 提供可复用连接的 CgClient 和四个同名查询函数；注入客户端由调用方关闭。
   课程上下文是服务端会话状态，调用方应按课程顺序查询；范围与 Rust 一样为通用元数据和页面导航。
 
+## AI 平台实现约定
+
+- 提供不可变且隐藏凭据 repr 的 `AiToken`、`AiClient`、`TokenInfo`，以及五个与 Rust 同名的模块函数。
+- 登录从 DeepSeek OAuth authorize 入口开始，最多十次 GET；支持 302/303 及相对 Location。
+  CAS 登录页通过原始 `CasToken` 换票据，过期异常直接传递。回调要求 MaaS `/callback` 和唯一非空 code，随后 POST `/api/oauth-login`。
+- 相比 Rust 将 Cookie 拼接后发送到所有域的方式，Python 使用 CookieJar 保留作用域，CAS 原始凭据只发送到 CAS。
+  最终会话只保留 MaaS API 可用 Cookie 与 Bearer；相同 Cookie 按 HTTP CookieJar 规则替换。
+- 跳转仅接受 DeepSeek 的 HTTPS 5556 端口、CAS 和 MaaS 的 HTTPS 默认端口；拒绝未知域、用户信息和降级 HTTP。
+  相比 Rust 的字符串包含判断，Python 校验精确主机与回调路径，禁止仅凭末次跳转 URL 的 code 绕过跳转次数限制。
+- 登录响应 HTTP 错误与无效 Bearer 均显式报错；API 的跳转、401/403 映射为 `TokenExpired`，403 也可能表示权限不足。
+- Token 名称可重复，ID 严格为 u64；列表缺失/null data 返回空列表，元数据字段使用严格类型。
+  创建固定发送 `{"name": name, "quota": 2000000}`，创建或删除的 `success=false` 抛出 `AiActionError`。
+  Python 修正了 Rust 删除失败时仍提示“创建失败”的错误信息。
+- 配额沿用 Rust 读取 `data.total_granted`，不据名称推断剩余额度或做额外计算。
+- `tests/ai/fixtures` 四个 JSON 原样复制自上游 `src/ai/token/test_data` 与 `src/ai/user_info/test_data`。
+  测试对照 Rust 预期值，另覆盖 OAuth/CAS 跳转、Cookie 作用域及替换、code 编码、失效传递、
+  跳转边界、请求体、非法 ID、业务失败、HTTP/网络/解析异常和客户端所有权。所有操作使用模拟响应。
+
 ## 测试来源与限制
 
 `tests/hdjw/fixtures` 从 Rust 对应模块的 `test_data` 原样复制，来源遵循仓库 AGPL-3.0 许可证。
@@ -230,4 +280,13 @@ URL 会话 ID、账号无权限消息、会话过期、表单编码和客户端�
 验证码 Cookie、登录错误码、三请求课程上下文、相对/绝对跳转、直接返回题目页面、
 无效条目跳过、会话失效、HTTP/网络错误及连接所有权。
 
-所有测试均为离线验证；真实账号、校园网服务状态及线上响应变化尚未验证。
+自动化测试均为离线验证；真实账号下的验证范围见 [校园网交互联调](live-check.md)。
+目前 CAS 登录、教务排名、个人门户校园卡资料、新门户账号资料、校园网本月流量、学工资料、宿舍电量、可信电子凭证排名、空体测预约列表、实验平台学期及 CG 课程列表真实查询已通过，其余接口及服务仍需联调。
+教务首次联调的登录失败由 Windows 系统代理引起：默认代理使入口跳至 WebVPN 校验页，
+交替使用默认/直连的无凭据探测稳定复现差异。联调脚本增加显式 `--direct` 后，原始账号查询链路通过。
+流量首次联调因同名 JSESSIONID 的不同 Path 被丢弃而返回门户主页，重复原流程仍失败；
+对照 Rust 追加 Cookie 的实验能取得 s_ticket。改用 CookieJar 按路径管理后，真实本月流量查询通过。
+凭证首次联调在下载文件时返回 400，定向诊断确认换票及预览正常，平台返回的三级目录路径被编码成了 `%2F`。
+修复为保留 `/` 并继续编码其他特殊字符，嵌套目录回归测试由失败转为通过；真实下载与 PDF 排名解析复测通过。
+AI 真实联调在连接 DeepSeek 授权入口时失败；无凭据探测确认 MaaS 首页可达，但 DeepSeek 的 5556 授权端口在本机直连及代理条件下均不可达。
+未进入业务响应阶段，不将该现象归因于解析或账号权限，也未据此修改授权端点。网络恢复后需重新验证 OAuth 与配额查询。

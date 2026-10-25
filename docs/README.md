@@ -16,7 +16,10 @@ Python 版移植自 Rust 项目 [qnxg/hnu_query](https://github.com/qnxg/hnu_que
 | `xgxt`、`wxpay` | 学工资料、宿舍信息与电量 | [学工与电量](modules/xgxt-wxpay.md) |
 | `yjsxt` | 研究生学期与课表 | [研究生系统](modules/yjsxt.md) |
 | `cg` | 编程课程、作业、题目与页面 | [CG 编程平台](modules/cg.md) |
+| `ai` | OAuth 登录、API Token 管理与配额 | [AI / MaaS 平台](modules/ai.md) |
 
-`ai` 尚未移植。各系统的登录方式、单位、分页和返回值差异见对应指南。
+各系统的登录方式、单位、分页和返回值差异见对应指南。所有模块已完成离线移植验证，真实查询的具体覆盖范围见 [联调记录](live-check.md)。
 
 维护文档：[移植进度与剩余工作](migration.md) · [接口约定、兼容差异与测试来源](porting.md)。
+
+连接校园网后，使用 [本地交互联调](live-check.md) 验证真实账号下的查询链路。

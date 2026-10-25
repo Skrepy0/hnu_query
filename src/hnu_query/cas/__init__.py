@@ -1,18 +1,21 @@
 """hnu_query.cas —— 湖南大学统一身份认证（CAS）模块。"""
+
 from .exceptions import (
-    CasError,
-    CasNetworkError,
-    CasStatusError,
-    TokenExpired,
     AccountIssue,
+    AccountLocked,
+    CasError,
+    CasLoginError,
+    CasNetworkError,
+    CasParseError,
+    CasStatusError,
     PasswordError,
     PasswordShouldChange,
-    AccountLocked,
     TFARequired,
+    TokenExpired,
 )
 from .login import acquire_by_login
 from .tfa import TFAToken
-from .ticket import get_ticket_url, extract_ticket, get_sticket
+from .ticket import extract_ticket, get_sticket, get_ticket_url
 from .token import CasToken
 
 __all__ = [
@@ -23,6 +26,8 @@ __all__ = [
     "extract_ticket",
     "get_sticket",
     "CasError",
+    "CasLoginError",
+    "CasParseError",
     "CasNetworkError",
     "CasStatusError",
     "TokenExpired",
