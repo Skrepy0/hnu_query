@@ -316,9 +316,7 @@ def card_transaction_records(body: str) -> CardTransactionDetail:
                 transaction_type=types[code],
             )
         )
-    return CardTransactionDetail(
-        has_next_page=next_page != 0, total_count=count, records=records
-    )
+    return CardTransactionDetail(has_next_page=next_page != 0, total_count=count, records=records)
 
 
 def apply_list(body: str) -> ApplyList:
@@ -343,9 +341,7 @@ def apply_list(body: str) -> ApplyList:
                 creator_name=raw.name,
                 creator_department=raw.department_name,
                 created=_datetime(raw.created),
-                finished=_datetime(raw.inst_finished)
-                if raw.inst_finished is not None
-                else None,
+                finished=_datetime(raw.inst_finished) if raw.inst_finished is not None else None,
                 status=statuses[raw.inst_status],
             )
         )

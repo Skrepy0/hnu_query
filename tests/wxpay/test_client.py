@@ -13,9 +13,7 @@ from hnu_query.xgxt import Dormitory, parse_dormitory
 async def test_request_headers_params_and_unit():
     route = respx.get(QUERY_URL).respond(200, json={"data": {"Balance": "146.88度"}})
     assert (
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("天马园区", "三区13栋", "1&x=2")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("天马园区", "三区13栋", "1&x=2"))
         == "146.88度"
     )
     request = route.calls.last.request
@@ -30,9 +28,7 @@ async def test_request_headers_params_and_unit():
     assert "cookie" not in request.headers
 
 
-@pytest.mark.parametrize(
-    "build,north,south", [("2栋", "52", "53"), ("3栋", "54", "55")]
-)
+@pytest.mark.parametrize("build,north,south", [("2栋", "52", "53"), ("3栋", "54", "55")])
 @pytest.mark.parametrize("success_side", ["north", "south"])
 @respx.mock
 async def test_wangluqiao_sides(build, north, south, success_side):
@@ -73,9 +69,7 @@ async def test_wangluqiao_sides(build, north, south, success_side):
 async def test_ambiguous_two_successes_or_two_failures(status):
     route = respx.get(QUERY_URL).respond(status, json={"data": {"Balance": "100度"}})
     with pytest.raises(wxpay.WxpayAmbiguityError):
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("望麓桥学生公寓", "2栋", "101")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("望麓桥学生公寓", "2栋", "101"))
     assert route.call_count == 2
 
 
@@ -88,9 +82,7 @@ async def test_side_selection_uses_request_success_before_parsing():
         ]
     )
     with pytest.raises(wxpay.WxpayParseError):
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("望麓桥学生公寓", "2栋", "101")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("望麓桥学生公寓", "2栋", "101"))
     assert route.call_count == 2
 
 
@@ -103,9 +95,7 @@ async def test_side_network_failure_then_success():
         ]
     )
     assert (
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("望麓桥学生公寓", "3栋", "101")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("望麓桥学生公寓", "3栋", "101"))
         == "20度"
     )
 
@@ -115,9 +105,7 @@ async def test_side_network_failure_then_success():
 async def test_http_error(status):
     respx.get(QUERY_URL).respond(status)
     with pytest.raises(wxpay.WxpayStatusError) as caught:
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("南校区", "10舍", "101")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("南校区", "10舍", "101"))
     assert caught.value.status_code == status
 
 
@@ -125,9 +113,7 @@ async def test_http_error(status):
 async def test_network_error():
     respx.get(QUERY_URL).mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(wxpay.WxpayNetworkError):
-        await wxpay.get_electricity(
-            Dormitory.from_parsed_value("南校区", "10舍", "101")
-        )
+        await wxpay.get_electricity(Dormitory.from_parsed_value("南校区", "10舍", "101"))
 
 
 @respx.mock

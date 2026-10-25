@@ -34,9 +34,7 @@ def test_order_rust_fixture(netflow_data):
         "should_pay": 0.0,
         "update_time": datetime(2026, 6, 1, 0, 56, 54),
     }
-    assert (
-        json.loads(result[0].model_dump_json())["update_time"] == "2026-06-01T00:56:54"
-    )
+    assert json.loads(result[0].model_dump_json())["update_time"] == "2026-06-01T00:56:54"
 
 
 @pytest.mark.parametrize(
@@ -69,9 +67,7 @@ def test_overdue_payment(netflow_data):
 
 
 def test_this_month_rust_fixture(netflow_data):
-    result = parse.this_month_info(
-        json.dumps(netflow_data("gettrafficinfobythismonth.json"))
-    )
+    result = parse.this_month_info(json.dumps(netflow_data("gettrafficinfobythismonth.json")))
     assert result.model_dump() == {
         "total_usage": "1.81GB",
         "upload_usage": "0.14GB",
@@ -89,9 +85,7 @@ def test_this_month_rust_fixture(netflow_data):
 
 def test_gb_suffix_not_duplicated(netflow_data):
     data = netflow_data("gettrafficinfobythismonth.json")
-    data["data"].update(
-        allTraffic="小于0.01GB", uploadTraffic="0.01GB", downloadTraffic="小于0.01"
-    )
+    data["data"].update(allTraffic="小于0.01GB", uploadTraffic="0.01GB", downloadTraffic="小于0.01")
     result = parse.this_month_info(json.dumps(data))
     assert result.total_usage == "小于0.01GB"
     assert result.upload_usage == "0.01GB"
@@ -100,8 +94,7 @@ def test_gb_suffix_not_duplicated(netflow_data):
 
 def test_unlock_status_rust_fixture(netflow_data):
     assert (
-        parse.unlock_status(json.dumps(netflow_data("getuserinfo.json")))
-        is UnlockStatus.Unlocked
+        parse.unlock_status(json.dumps(netflow_data("getuserinfo.json"))) is UnlockStatus.Unlocked
     )
 
 
@@ -134,9 +127,7 @@ def test_invalid_unlock_status(value):
         parse.unlock_status,
     ],
 )
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", "null", "[]", "{}", '{"data":null}']
-)
+@pytest.mark.parametrize("body", ["<html>login</html>", "null", "[]", "{}", '{"data":null}'])
 def test_malformed_response(parser, body):
     with pytest.raises(NetflowParseError):
         parser(body)

@@ -12,9 +12,7 @@ def test_card_info_rust_fixture(pt_data):
 
 
 def test_consumption_rust_fixture(pt_data):
-    history = parse.card_history(
-        json.dumps(pt_data("getAccHisConsubDzzfLog_Consumption.json"))
-    )
+    history = parse.card_history(json.dumps(pt_data("getAccHisConsubDzzfLog_Consumption.json")))
     assert (history.count, history.total, len(history.items)) == (7, -51.0, 7)
     assert history.items[0].model_dump() == {
         "date_time": datetime(2026, 5, 30, 17, 38, 44),
@@ -27,16 +25,11 @@ def test_consumption_rust_fixture(pt_data):
         "name": "持卡人消费",
     }
     assert all(item.amount <= 0 for item in history.items)
-    assert (
-        json.loads(history.model_dump_json())["items"][0]["date_time"]
-        == "2026-05-30T17:38:44"
-    )
+    assert json.loads(history.model_dump_json())["items"][0]["date_time"] == "2026-05-30T17:38:44"
 
 
 def test_recharge_rust_fixture(pt_data):
-    history = parse.card_history(
-        json.dumps(pt_data("getAccHisConsubDzzfLog_Recharge.json"))
-    )
+    history = parse.card_history(json.dumps(pt_data("getAccHisConsubDzzfLog_Recharge.json")))
     assert (history.count, history.total, len(history.items)) == (3, 50.0, 3)
     assert history.items[0].model_dump() == {
         "date_time": datetime(2026, 5, 25, 11, 57, 41),
@@ -76,12 +69,8 @@ def test_rust_count_cast(count, expected):
 
 
 def test_email_fixtures(pt_data):
-    assert (
-        parse.email_unread_count(json.dumps(pt_data("email_unread_success.json"))) == 6
-    )
-    assert (
-        parse.email_unread_count(json.dumps(pt_data("email_unread_fail.json"))) is None
-    )
+    assert parse.email_unread_count(json.dumps(pt_data("email_unread_success.json"))) == 6
+    assert parse.email_unread_count(json.dumps(pt_data("email_unread_fail.json"))) is None
     assert parse.email_unread_count('{"data":{"unReadCount":0}}') == 0
     assert parse.email_unread_count('{"data":{"unReadCount":null}}') is None
 
@@ -100,9 +89,7 @@ def test_csrf_token():
     "parser",
     [parse.card_info, parse.card_history, parse.email_unread_count, parse.csrf_token],
 )
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", "null", "[]", "{}", '{"data":null}']
-)
+@pytest.mark.parametrize("body", ["<html>login</html>", "null", "[]", "{}", '{"data":null}'])
 def test_malformed_response(parser, body):
     with pytest.raises(PtParseError):
         parser(body)

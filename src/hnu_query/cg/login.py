@@ -1,7 +1,7 @@
 import base64
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
@@ -68,9 +68,7 @@ class CgSession:
         location = response.headers.get("location")
         if not location:
             raise CgLoginError("CG 登录响应缺少 Location")
-        code = parse_qs(urlsplit(location).query, keep_blank_values=True).get(
-            "loginErr", ["0"]
-        )[0]
+        code = parse_qs(urlsplit(location).query, keep_blank_values=True).get("loginErr", ["0"])[0]
         if code == "1":
             raise PasswordError("CG 账号或密码错误")
         if code == "6":

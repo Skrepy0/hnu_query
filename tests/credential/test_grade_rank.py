@@ -41,14 +41,17 @@ async def test_get_grade_rank_success(ca_token, monkeypatch):
         f"{BASE}/student/student/caTemplate/preview_file",
         params={
             "templateId": UNDERGRADUATE_MAJOR_ALL_TEMPLATE_ID,
-            "isbzf": "0", "kcxz": "", "xfjd": "", "xzkc": "",
+            "isbzf": "0",
+            "kcxz": "",
+            "xfjd": "",
+            "xzkc": "",
         },
     ).mock(return_value=httpx.Response(200, text=_PREVIEW_JSON))
 
     # ② mock file
-    respx.get(
-        f"{BASE}/student/sys/common/view/abc123.pdf"
-    ).mock(return_value=httpx.Response(200, content=_FAKE_PDF))
+    respx.get(f"{BASE}/student/sys/common/view/abc123.pdf").mock(
+        return_value=httpx.Response(200, content=_FAKE_PDF)
+    )
 
     # ③ mock parse_rank（避免依赖真实 PDF 解析）
     monkeypatch.setattr(
@@ -67,9 +70,9 @@ async def test_get_grade_rank_success(ca_token, monkeypatch):
 @respx.mock
 async def test_get_grade_rank_preview_401(ca_token):
     """preview_file 返回 401 → CaStatusError。"""
-    respx.get(
-        f"{BASE}/student/student/caTemplate/preview_file"
-    ).mock(return_value=httpx.Response(401, text="Token expired"))
+    respx.get(f"{BASE}/student/student/caTemplate/preview_file").mock(
+        return_value=httpx.Response(401, text="Token expired")
+    )
 
     with pytest.raises(CaStatusError) as exc:
         await get_grade_rank(ca_token)
@@ -81,13 +84,13 @@ async def test_get_grade_rank_preview_401(ca_token):
 @respx.mock
 async def test_get_grade_rank_file_400(ca_token, monkeypatch):
     """file 返回 400 → CaStatusError。"""
-    respx.get(
-        f"{BASE}/student/student/caTemplate/preview_file"
-    ).mock(return_value=httpx.Response(200, text=_PREVIEW_JSON))
+    respx.get(f"{BASE}/student/student/caTemplate/preview_file").mock(
+        return_value=httpx.Response(200, text=_PREVIEW_JSON)
+    )
 
-    respx.get(
-        f"{BASE}/student/sys/common/view/abc123.pdf"
-    ).mock(return_value=httpx.Response(400, text="Bad Request"))
+    respx.get(f"{BASE}/student/sys/common/view/abc123.pdf").mock(
+        return_value=httpx.Response(400, text="Bad Request")
+    )
 
     monkeypatch.setattr(
         "hnu_query.credential.grade_rank.parse_rank",
@@ -104,9 +107,9 @@ async def test_get_grade_rank_file_400(ca_token, monkeypatch):
 @respx.mock
 async def test_get_grade_rank_network_error(ca_token):
     """preview_file 网络失败 → CaNetworkError。"""
-    respx.get(
-        f"{BASE}/student/student/caTemplate/preview_file"
-    ).mock(side_effect=httpx.ReadTimeout("read timeout"))
+    respx.get(f"{BASE}/student/student/caTemplate/preview_file").mock(
+        side_effect=httpx.ReadTimeout("read timeout")
+    )
 
     with pytest.raises(CaNetworkError):
         await get_grade_rank(ca_token)
@@ -118,9 +121,9 @@ async def test_get_grade_rank_bad_code(ca_token):
     """preview_file 返回 code != 200 → CaParseError。"""
     from hnu_query.credential.exceptions import CaParseError
 
-    respx.get(
-        f"{BASE}/student/student/caTemplate/preview_file"
-    ).mock(return_value=httpx.Response(200, text='{"code": 500, "message": "error"}'))
+    respx.get(f"{BASE}/student/student/caTemplate/preview_file").mock(
+        return_value=httpx.Response(200, text='{"code": 500, "message": "error"}')
+    )
 
     with pytest.raises(CaParseError):
         await get_grade_rank(ca_token)

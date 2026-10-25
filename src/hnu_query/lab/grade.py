@@ -11,9 +11,7 @@ __all__ = [
 ]
 
 
-async def get_lab_grade(
-    lab_token: LabToken, course_id: str, semester_id: str
-) -> list[LabGrade]:
+async def get_lab_grade(lab_token: LabToken, course_id: str, semester_id: str) -> list[LabGrade]:
     async with LabClient(lab_token) as client:
         return await client.get_lab_grade(course_id, semester_id)
 

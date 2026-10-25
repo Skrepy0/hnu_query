@@ -158,6 +158,4 @@ def unlock_status(body: str) -> UnlockStatus:
     value = data["IsLocked"]
     if not -(2**63) <= value < 2**63:
         raise NetflowParseError("流量锁定状态超出整数范围")
-    return {0: UnlockStatus.Unlocked, 1: UnlockStatus.Locked}.get(
-        value, UnlockStatus.Unknown
-    )
+    return {0: UnlockStatus.Unlocked, 1: UnlockStatus.Locked}.get(value, UnlockStatus.Unknown)

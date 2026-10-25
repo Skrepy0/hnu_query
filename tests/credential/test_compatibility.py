@@ -107,21 +107,15 @@ async def test_cdn_does_not_receive_custom_credentials():
 
 @respx.mock
 async def test_file_name_encodes_query_and_fragment(ca_token):
-    route = respx.get(BASE + "/student/sys/common/view/a%3Fb%23c.pdf").respond(
-        content=b"pdf"
-    )
+    route = respx.get(BASE + "/student/sys/common/view/a%3Fb%23c.pdf").respond(content=b"pdf")
     assert await file(ca_token, "a?b#c.pdf") == b"pdf"
     assert not route.calls.last.request.url.query
 
 
-@pytest.mark.parametrize(
-    "target", ["http://cdn.example.org/a", "https://cas.hnu.edu.cn/cas/login"]
-)
+@pytest.mark.parametrize("target", ["http://cdn.example.org/a", "https://cas.hnu.edu.cn/cas/login"])
 @respx.mock
 async def test_download_rejects_downgrade_or_cas_login(ca_token, target):
-    respx.get(BASE + "/student/sys/common/view/file.pdf").respond(
-        302, headers={"location": target}
-    )
+    respx.get(BASE + "/student/sys/common/view/file.pdf").respond(302, headers={"location": target})
     async with CaClient(ca_token) as client:
         with pytest.raises(CaLoginError):
             await client.file("file.pdf")
@@ -133,9 +127,7 @@ async def test_download_rejects_downgrade_or_cas_login(ca_token, target):
 async def test_relative_download_and_redirect_limit(ca_token):
     start = BASE + "/student/sys/common/view/file.pdf"
     respx.get(start).respond(302, headers={"location": "/file.pdf"})
-    route = respx.get(BASE + "/file.pdf").respond(
-        302, headers={"location": "/file.pdf"}
-    )
+    route = respx.get(BASE + "/file.pdf").respond(302, headers={"location": "/file.pdf"})
     with pytest.raises(CaLoginError):
         await file(ca_token, "file.pdf")
     assert route.call_count == 10
@@ -196,9 +188,7 @@ async def test_bad_ticket_callbacks(cas_token, callback):
 @respx.mock
 async def test_login_redirect_cannot_send_ticket_to_other_domain(cas_token):
     respx.get(CA_URL).respond(302, headers={"location": TICKET})
-    respx.get(TICKET).respond(
-        302, headers={"location": "https://other.example/?ticket=private"}
-    )
+    respx.get(TICKET).respond(302, headers={"location": "https://other.example/?ticket=private"})
     with pytest.raises(CaLoginError):
         await acquire_by_cas_login(cas_token)
     assert len(respx.calls) == 2
@@ -222,8 +212,6 @@ async def test_file_preserves_server_returned_directory_path(ca_token):
             return httpx.Response(400)
         return httpx.Response(200, content=b"%PDF-test")
 
-    route = respx.get(url__startswith=BASE + "/student/sys/common/view/").mock(
-        side_effect=download
-    )
+    route = respx.get(url__startswith=BASE + "/student/sys/common/view/").mock(side_effect=download)
     assert await file(ca_token, "temp/2026/10/document.pdf") == b"%PDF-test"
     assert route.calls.last.request.url.raw_path.endswith(b"/temp/2026/10/document.pdf")

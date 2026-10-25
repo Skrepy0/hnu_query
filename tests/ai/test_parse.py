@@ -7,9 +7,7 @@ from hnu_query.ai import AiParseError, parse
 
 def test_rust_samples(sample):
     tokens = parse.token_list(sample("tokens.json"))
-    assert [item.model_dump() for item in tokens] == [
-        {"token_name": "hello", "id": 3296}
-    ]
+    assert [item.model_dump() for item in tokens] == [{"token_name": "hello", "id": 3296}]
     assert parse.token_key(sample("key.json")) == "zF0Asilc5eRnGbwafZ5gDzIH"
     assert parse.check_action_success(sample("apply-token.json")) is True
     assert parse.remaining_quota(sample("user-info.json")) == 114514
@@ -31,9 +29,7 @@ def test_bad_token_id(id):
         parse.token_list(json.dumps({"data": [{"token_name": "hello", "id": id}]}))
 
 
-@pytest.mark.parametrize(
-    "data", [False, {}, "", [1], [{"id": 1}], [{"id": 1, "token_name": 2}]]
-)
+@pytest.mark.parametrize("data", [False, {}, "", [1], [{"id": 1}], [{"id": 1, "token_name": 2}]])
 def test_bad_list(data):
     with pytest.raises(AiParseError):
         parse.token_list(json.dumps({"data": data}))
@@ -73,9 +69,7 @@ def test_action_false_and_unmodified_key():
     assert parse.remaining_quota('{"data":{"total_granted":0}}') == 0
 
 
-@pytest.mark.parametrize(
-    "parser", [parse.token_key, parse.remaining_quota, parse.bearer_token]
-)
+@pytest.mark.parametrize("parser", [parse.token_key, parse.remaining_quota, parse.bearer_token])
 @pytest.mark.parametrize("text", ["{}", '{"data":null}', '{"data":[]}', '{"data":{}}'])
 def test_missing_data_fields(parser, text):
     with pytest.raises(AiParseError):

@@ -25,17 +25,13 @@ def _u32(value: int) -> None:
 class IPortalClient:
     """新门户异步客户端；注入的 HTTP 客户端由调用者关闭。"""
 
-    def __init__(
-        self, token: IPortalToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: IPortalToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
 
     async def _text(self, path: str, **kwargs) -> str:
-        response = await request(
-            self._client, path, headers=dict(self._token.headers), **kwargs
-        )
+        response = await request(self._client, path, headers=dict(self._token.headers), **kwargs)
         return response.text
 
     async def get_account_info(self) -> AccountInfo:
@@ -43,14 +39,10 @@ class IPortalClient:
 
     async def get_personal_data(self) -> PersonalData:
         types = parse.personal_data_query_ids(
-            await self._text(
-                "/personal/frontend/data/items", params={"type": "personal_data"}
-            )
+            await self._text("/personal/frontend/data/items", params={"type": "personal_data"})
         )
         tasks = [
-            asyncio.create_task(
-                self._text("/personal/frontend/data/detail", params={"id": id})
-            )
+            asyncio.create_task(self._text("/personal/frontend/data/detail", params={"id": id}))
             for _, id in types
         ]
         try:
@@ -68,9 +60,7 @@ class IPortalClient:
             raise ValueError("time 必须是不带时区的 datetime，按 UTC 解释")
         timestamp = calendar.timegm(time.timetuple())
         return parse.term_info(
-            await self._text(
-                "/hnu/frontend/term", params={"current_time": str(timestamp)}
-            )
+            await self._text("/hnu/frontend/term", params={"current_time": str(timestamp)})
         )
 
     async def get_card_info(self) -> CardInfo:

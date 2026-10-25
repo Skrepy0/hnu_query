@@ -7,9 +7,7 @@ from ._http import API_URL, BASE_URL, request
 from .exceptions import GymLoginError
 from .token import GymToken
 
-GYM_URL_FROM_CAS = (
-    "http://cas.hnu.edu.cn/application/sso.zf?login=898A822E9695C137E053026B3E0A65D7"
-)
+GYM_URL_FROM_CAS = "http://cas.hnu.edu.cn/application/sso.zf?login=898A822E9695C137E053026B3E0A65D7"
 
 
 def _login_token(response: httpx.Response) -> GymToken:
@@ -25,9 +23,7 @@ def _login_token(response: httpx.Response) -> GymToken:
         cookies[key] = value
     if not cookies:
         raise GymLoginError("体测登录未返回会话 Cookie")
-    return GymToken(
-        {"Cookie": "; ".join(f"{key}={value}" for key, value in cookies.items())}
-    )
+    return GymToken({"Cookie": "; ".join(f"{key}={value}" for key, value in cookies.items())})
 
 
 async def acquire_by_direct_login(stu_id: str, password: str) -> GymToken:
@@ -50,10 +46,6 @@ async def acquire_by_cas_login(cas_token: CasToken) -> GymToken:
     s_ticket, _ = await get_sticket(cas_token, GYM_URL_FROM_CAS)
     form = {"s_ticket": s_ticket, "login_id": cas_token.stu_id}
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
-        await request(
-            client, "GET", BASE_URL + "/view/login/loginPage.html", params=form
-        )
-        response = await request(
-            client, "POST", API_URL + "/Login/ticketLogin", data=form
-        )
+        await request(client, "GET", BASE_URL + "/view/login/loginPage.html", params=form)
+        response = await request(client, "POST", API_URL + "/Login/ticketLogin", data=form)
         return _login_token(response)

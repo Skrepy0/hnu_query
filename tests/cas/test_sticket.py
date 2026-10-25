@@ -5,16 +5,12 @@ import respx
 from hnu_query.cas import CasNetworkError, CasStatusError, TokenExpired, get_sticket
 
 START = "http://cas.hnu.edu.cn/application/sso.zf?login=gym"
-CALLBACK = (
-    "https://cas.hnu.edu.cn/sprcialapp/zf_form/index.zf?s_ticket=ST%2Btest&other=1"
-)
+CALLBACK = "https://cas.hnu.edu.cn/sprcialapp/zf_form/index.zf?s_ticket=ST%2Btest&other=1"
 
 
 @respx.mock
 async def test_sticket_redirects_and_cookie_merge(cas_token):
-    respx.get(START).respond(
-        302, headers={"location": "/next", "set-cookie": "route=one; Path=/"}
-    )
+    respx.get(START).respond(302, headers={"location": "/next", "set-cookie": "route=one; Path=/"})
     route = respx.get("http://cas.hnu.edu.cn/next").respond(
         302,
         headers={

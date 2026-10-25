@@ -23,9 +23,9 @@ async def test_three_form_requests_and_merge_order(xgxt_token, xgxt_text):
                 {"fieldName": "学号", "defaultValue": "last-wins"}
             )
         routes.append(
-            respx.get(
-                BASE_URL + f"/zftal-xgxt-web/dynamic/form/group/{group}/default.zf"
-            ).respond(200, json=data)
+            respx.get(BASE_URL + f"/zftal-xgxt-web/dynamic/form/group/{group}/default.zf").respond(
+                200, json=data
+            )
         )
     result = await xgxt.get_person_info(xgxt_token)
     assert result.stu_id == "last-wins" and result.enter_year == 2025

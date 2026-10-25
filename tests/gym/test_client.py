@@ -58,9 +58,7 @@ async def test_empty_appointments(gym_token):
     assert len(respx.calls) == 1
 
 
-@pytest.mark.parametrize(
-    "status,error", [(500, gym.GymStatusError), (302, gym.GymStatusError)]
-)
+@pytest.mark.parametrize("status,error", [(500, gym.GymStatusError), (302, gym.GymStatusError)])
 @respx.mock
 async def test_http_error(gym_token, status, error):
     respx.post(API_URL + "/Appoint/getStudentClass").respond(status)
@@ -70,9 +68,7 @@ async def test_http_error(gym_token, status, error):
 
 @respx.mock
 async def test_network_error(gym_token):
-    respx.post(API_URL + "/Appoint/getStudentClass").mock(
-        side_effect=httpx.ConnectError("offline")
-    )
+    respx.post(API_URL + "/Appoint/getStudentClass").mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(gym.GymNetworkError):
         await gym.get_appointment(gym_token)
 

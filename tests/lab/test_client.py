@@ -50,34 +50,28 @@ from hnu_query.lab._http import BASE_URL
     ],
 )
 @respx.mock
-async def test_query_parameters(
-    lab_token, lab_data, method, path, fixture, args, verb, params
-):
-    route = respx.route(method=verb, url=BASE_URL + path).respond(
-        200, json=lab_data(fixture)
-    )
+async def test_query_parameters(lab_token, lab_data, method, path, fixture, args, verb, params):
+    route = respx.route(method=verb, url=BASE_URL + path).respond(200, json=lab_data(fixture))
     assert await getattr(lab, method)(lab_token, *args)
     request = route.calls.last.request
     assert request.headers["cookie"] == "ASP.NET_SessionId=lab-test"
     if verb == "GET":
         assert dict(request.url.params) == params
     else:
-        assert parse_qs(request.content.decode()) == {
-            key: [value] for key, value in params.items()
-        }
+        assert parse_qs(request.content.decode()) == {key: [value] for key, value in params.items()}
 
 
 @respx.mock
 async def test_lab_grade_three_requests(lab_token, lab_data):
-    grades = respx.post(
-        BASE_URL + "/XPK/StudentScoreSearch/GetStudentLabScore"
-    ).respond(200, json=lab_data("GetStudentLabScore.json"))
+    grades = respx.post(BASE_URL + "/XPK/StudentScoreSearch/GetStudentLabScore").respond(
+        200, json=lab_data("GetStudentLabScore.json")
+    )
     detail = respx.get(BASE_URL + "/XPK/StudentScoreSearch/ShowScore").respond(
         200, json=lab_data("ShowScore.json")
     )
-    structure = respx.get(
-        BASE_URL + "/XPK/StudentScoreSearch/GetLabScoreStructure"
-    ).respond(200, json=lab_data("GetLabScoreStructure.json"))
+    structure = respx.get(BASE_URL + "/XPK/StudentScoreSearch/GetLabScoreStructure").respond(
+        200, json=lab_data("GetLabScoreStructure.json")
+    )
     result = await lab.get_lab_grade(lab_token, "68&x=1", "18")
     assert len(result) == 3
     assert parse_qs(grades.calls.last.request.content.decode()) == {
@@ -100,9 +94,7 @@ async def test_lab_grade_three_requests(lab_token, lab_data):
 
 @respx.mock
 async def test_virtual_lab_grade_form(lab_token):
-    route = respx.post(
-        BASE_URL + "/XPK/StudentScoreSearch/GetStudentFZLabScore"
-    ).respond(
+    route = respx.post(BASE_URL + "/XPK/StudentScoreSearch/GetStudentFZLabScore").respond(
         200,
         json={
             "rows": [

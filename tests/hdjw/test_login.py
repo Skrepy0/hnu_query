@@ -51,9 +51,7 @@ async def test_relative_redirect(cas_token):
 @respx.mock
 async def test_final_redirect_can_issue_auth_cookie(cas_token):
     mock_login()
-    respx.get(TARGET).respond(
-        302, headers={"set-cookie": "auth=ok", "location": "/home"}
-    )
+    respx.get(TARGET).respond(302, headers={"set-cookie": "auth=ok", "location": "/home"})
     token = await acquire_by_cas_login(cas_token)
     assert "auth=ok" in token.headers["Cookie"]
 

@@ -6,9 +6,7 @@ BASE_URL = "http://gymos.hnu.edu.cn/bdlp_api_fitness_test_student_h5"
 API_URL = BASE_URL + "/public/index.php/index"
 
 
-async def request(
-    client: httpx.AsyncClient, method: str, url: str, **kwargs
-) -> httpx.Response:
+async def request(client: httpx.AsyncClient, method: str, url: str, **kwargs) -> httpx.Response:
     try:
         response = await client.request(method, url, follow_redirects=False, **kwargs)
     except httpx.RequestError as exc:

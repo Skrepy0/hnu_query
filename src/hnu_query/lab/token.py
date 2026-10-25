@@ -1,6 +1,6 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,9 +12,7 @@ class LabToken:
         object.__setattr__(self, "headers", MappingProxyType(dict(self.headers)))
 
     @classmethod
-    def from_headers_unchecked(
-        cls, headers: Mapping[str, str], stu_id: str
-    ) -> "LabToken":
+    def from_headers_unchecked(cls, headers: Mapping[str, str], stu_id: str) -> "LabToken":
         """恢复请求头和对应学号，不验证会话有效性。"""
         return cls(headers, stu_id)
 

@@ -16,6 +16,7 @@ def test_token_with_headers():
 def test_token_is_frozen():
     """CaToken 应不可变，防止意外修改。"""
     import pytest
+
     token = CaToken(headers={"Cookie": "a=b"})
     with pytest.raises(Exception):  # FrozenInstanceError
         token.headers = {}  # type: ignore[misc]

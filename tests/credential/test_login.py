@@ -48,13 +48,14 @@ async def test_acquire_by_cas_login_success():
     )
 
     # validateLogin 返回 JSON
-    respx.get(
-        url__startswith=f"{BASE}/student/cas/client/validateLogin"
-    ).mock(
-        return_value=httpx.Response(200, json={
-            "message": "登录成功",
-            "result": {"token": "eyJhbGciOiJIUzI1NiJ9.fake-token"},
-        })
+    respx.get(url__startswith=f"{BASE}/student/cas/client/validateLogin").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "message": "登录成功",
+                "result": {"token": "eyJhbGciOiJIUzI1NiJ9.fake-token"},
+            },
+        )
     )
 
     cas_token = FakeCasToken()
@@ -85,9 +86,7 @@ async def test_acquire_by_cas_login_cas_session_expired():
 async def test_acquire_by_cas_login_ticket_url_fails():
     """GET ticket_url 返回 4xx → CaStatusError。"""
     _mock_cas_login_ok()
-    respx.get(TICKET_URL).mock(
-        return_value=httpx.Response(403, text="Forbidden")
-    )
+    respx.get(TICKET_URL).mock(return_value=httpx.Response(403, text="Forbidden"))
 
     cas_token = FakeCasToken()
     with pytest.raises(CaStatusError) as exc:
@@ -102,13 +101,14 @@ async def test_acquire_by_cas_login_message_failure():
     """validateLogin 返回 message != 登录成功 → CaLoginError。"""
     _mock_cas_login_ok()
     respx.get(TICKET_URL).mock(return_value=httpx.Response(200))
-    respx.get(
-        url__startswith=f"{BASE}/student/cas/client/validateLogin"
-    ).mock(
-        return_value=httpx.Response(200, json={
-            "message": "ticket 已过期",
-            "result": {},
-        })
+    respx.get(url__startswith=f"{BASE}/student/cas/client/validateLogin").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "message": "ticket 已过期",
+                "result": {},
+            },
+        )
     )
 
     cas_token = FakeCasToken()
@@ -122,13 +122,14 @@ async def test_acquire_by_cas_login_missing_token():
     """validateLogin 没有 token 字段 → CaLoginError。"""
     _mock_cas_login_ok()
     respx.get(TICKET_URL).mock(return_value=httpx.Response(200))
-    respx.get(
-        url__startswith=f"{BASE}/student/cas/client/validateLogin"
-    ).mock(
-        return_value=httpx.Response(200, json={
-            "message": "登录成功",
-            "result": {},
-        })
+    respx.get(url__startswith=f"{BASE}/student/cas/client/validateLogin").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "message": "登录成功",
+                "result": {},
+            },
+        )
     )
 
     cas_token = FakeCasToken()
@@ -142,9 +143,7 @@ async def test_acquire_by_cas_login_returns_html():
     """validateLogin 返回 HTML（ticket 失效）→ CaLoginError。"""
     _mock_cas_login_ok()
     respx.get(TICKET_URL).mock(return_value=httpx.Response(200))
-    respx.get(
-        url__startswith=f"{BASE}/student/cas/client/validateLogin"
-    ).mock(
+    respx.get(url__startswith=f"{BASE}/student/cas/client/validateLogin").mock(
         return_value=httpx.Response(
             200,
             text="<html>CAS login page</html>",

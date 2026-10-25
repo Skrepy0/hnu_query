@@ -18,8 +18,8 @@ def _u32(value: str | None) -> int | None:
     return number if number < 2**32 else None
 
 
-def _after(value: str, marker: str) -> str | None:
-    return value.split(marker, 1)[1] if marker in value else None
+def _after(value: str | None, marker: str) -> str | None:
+    return value.split(marker, 1)[1] if value is not None and marker in value else None
 
 
 def _courses(elements, id_value) -> list[CgCourse] | None:
@@ -69,24 +69,24 @@ def problems(html: str) -> list[CgProblem] | None:
     for row in HTMLParser(html).css("table.table-striped tr"):
         links = row.css("a[href]")
         problem = next(
-            (node for node in links if "programList.jsp" in node.attributes["href"]),
+            (node for node in links if "programList.jsp" in (node.attributes["href"] or "")),
             None,
         )
         judge = next(
             (
                 node
                 for node in links
-                if "judgeDetailsRedirect.jsp" in node.attributes["href"]
+                if "judgeDetailsRedirect.jsp" in (node.attributes["href"] or "")
             ),
             None,
         )
         cells = row.css("td")
         if problem is None or judge is None or len(cells) < 2:
             continue
-        index = _after(problem.attributes["href"], "proNum=")
-        id = _after(judge.attributes["href"], "problemID=")
-        index = _u32(index.split("&", 1)[0]) if index is not None else None
-        id = _u32(id.split("&", 1)[0]) if id is not None else None
+        index_text = _after(problem.attributes["href"], "proNum=")
+        id_text = _after(judge.attributes["href"], "problemID=")
+        index = _u32(index_text.split("&", 1)[0]) if index_text is not None else None
+        id = _u32(id_text.split("&", 1)[0]) if id_text is not None else None
         title = problem.text().strip()
         try:
             score_text = cells[1].text().strip()

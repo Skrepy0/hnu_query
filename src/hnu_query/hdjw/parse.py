@@ -61,7 +61,7 @@ def _rows(body: str, *, count_required: bool = False) -> list[dict]:
 
 
 def _numbers(text: str, separator: str) -> set[int]:
-    result = set()
+    result: set[int] = set()
     for part in text.strip().split(separator):
         match = re.fullmatch(r"(\d+)(?:-(\d+))?", part.strip())
         if match is None:
@@ -81,14 +81,10 @@ def course_schedule(sktime: str, skddmc: str) -> list[CourseSchedule]:
         raise HdjwParseError("上课时间与地点数量不匹配")
     merged = defaultdict(set)
     for text, place in zip(times, places):
-        match = re.fullmatch(
-            r"星期([一二三四五六日七])(.*?)节.*?\{\s*(.*?)周\}(.*)", text.strip()
-        )
+        match = re.fullmatch(r"星期([一二三四五六日七])(.*?)节.*?\{\s*(.*?)周\}(.*)", text.strip())
         if match is None:
             raise HdjwParseError("无法解析上课时间")
-        day = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "日": 7, "七": 7}[
-            match[1]
-        ]
+        day = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "日": 7, "七": 7}[match[1]]
         periods = _numbers(match[2], "、")
         weeks = _numbers(match[3], ",")
         suffix = match[4].strip()
@@ -189,11 +185,7 @@ def grade_detail(body: str) -> list[GradeDetailItem]:
         raise HdjwParseError("找不到成绩详情表头")
     names = {}
     for column in re.findall(r"\{([^{}]*)\}", columns[1]):
-        fields = dict(
-            re.findall(
-                r"""(?:["']?)(field|title)["']?\s*:\s*["']([^"']*)["']""", column
-            )
-        )
+        fields = dict(re.findall(r"""(?:["']?)(field|title)["']?\s*:\s*["']([^"']*)["']""", column))
         if "field" in fields:
             names[fields["field"]] = fields["title"]
     return [

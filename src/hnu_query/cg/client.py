@@ -14,9 +14,7 @@ def _u32(value: int) -> None:
 class CgClient:
     """CG 导航和元数据客户端；注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: CgToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: CgToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
@@ -39,9 +37,7 @@ class CgClient:
 
     async def get_assignment_list(self, course_id: int) -> list[CgAssignment] | None:
         _u32(course_id)
-        response = await self._get(
-            "/courselist.jsp", params={"courseID": str(course_id)}
-        )
+        response = await self._get("/courselist.jsp", params={"courseID": str(course_id)})
         require_status(response, 302)
         context = await self._get(redirect_url(response))
         require_status(context)
@@ -51,9 +47,7 @@ class CgClient:
 
     async def get_problem_list(self, assign_id: int) -> list[CgProblem] | None:
         _u32(assign_id)
-        response = await self._get(
-            "/assignment/index.jsp", params={"assignID": str(assign_id)}
-        )
+        response = await self._get("/assignment/index.jsp", params={"assignID": str(assign_id)})
         require_status(response)
         return parse.problems(response.text)
 

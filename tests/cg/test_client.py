@@ -8,9 +8,7 @@ from hnu_query.cg._http import BASE_URL
 
 @respx.mock
 async def test_multi_course_page(cg_token, cg_text):
-    route = respx.get(BASE_URL + "/courselist.jsp").respond(
-        200, text=cg_text("courselist.html")
-    )
+    route = respx.get(BASE_URL + "/courselist.jsp").respond(200, text=cg_text("courselist.html"))
     result = await cg.get_course_list(cg_token)
     assert [c.id for c in result] == [1001, 2002, 3003]
     assert route.calls.last.request.headers["cookie"] == "JSESSIONID=cg-test"
@@ -19,12 +17,8 @@ async def test_multi_course_page(cg_token, cg_text):
 
 @respx.mock
 async def test_single_course_main_branch(cg_token, cg_text):
-    respx.get(BASE_URL + "/courselist.jsp").respond(
-        302, headers={"location": "/main.jsp"}
-    )
-    respx.get(BASE_URL + "/main.jsp").respond(
-        200, text=cg_text("main_single_course.html")
-    )
+    respx.get(BASE_URL + "/courselist.jsp").respond(302, headers={"location": "/main.jsp"})
+    respx.get(BASE_URL + "/main.jsp").respond(200, text=cg_text("main_single_course.html"))
     result = await cg.get_course_list(cg_token)
     assert [(c.id, c.name) for c in result] == [(1001, "高等数学")]
     assert len(respx.calls) == 2
@@ -33,9 +27,9 @@ async def test_single_course_main_branch(cg_token, cg_text):
 @pytest.mark.parametrize("location", ["main.jsp", "/main.jsp", BASE_URL + "/main.jsp"])
 @respx.mock
 async def test_course_context_before_assignments(cg_token, cg_text, location):
-    context = respx.get(
-        BASE_URL + "/courselist.jsp", params={"courseID": "1001"}
-    ).respond(302, headers={"location": location})
+    context = respx.get(BASE_URL + "/courselist.jsp", params={"courseID": "1001"}).respond(
+        302, headers={"location": location}
+    )
     main = respx.get(BASE_URL + "/main.jsp").respond(200, text="context ready")
     assignments = respx.get(BASE_URL + "/assignment/mainActiveAssigns.jsp").respond(
         200, text=cg_text("assignment_list.html")
@@ -76,9 +70,9 @@ async def test_problem_page_redirect(cg_token, cg_text, location):
     first = respx.get(BASE_URL + "/assignment/programList.jsp").respond(
         302, headers={"location": location}
     )
-    final = respx.get(
-        BASE_URL + "/assignment/programList_ce.jsp?problemID=20001"
-    ).respond(200, text=cg_text("problem_page.html"))
+    final = respx.get(BASE_URL + "/assignment/programList_ce.jsp?problemID=20001").respond(
+        200, text=cg_text("problem_page.html")
+    )
     html = await cg.get_problem_page(cg_token, 5001, 1)
     assert html == cg_text("problem_page.html")
     assert dict(first.calls.last.request.url.params) == {
@@ -90,9 +84,7 @@ async def test_problem_page_redirect(cg_token, cg_text, location):
 
 
 @respx.mock
-async def test_direct_problem_page_does_not_refetch_without_parameters(
-    cg_token, cg_text
-):
+async def test_direct_problem_page_does_not_refetch_without_parameters(cg_token, cg_text):
     route = respx.get(BASE_URL + "/assignment/programList.jsp").respond(
         200, text=cg_text("problem_page.html")
     )
@@ -112,9 +104,7 @@ async def test_direct_problem_page_does_not_refetch_without_parameters(
 )
 @respx.mock
 async def test_expired_initial_page(cg_token, method, path, args):
-    respx.get(BASE_URL + path).respond(
-        302, headers={"location": "/indexcs/simple.jsp?loginErr=0"}
-    )
+    respx.get(BASE_URL + path).respond(302, headers={"location": "/indexcs/simple.jsp?loginErr=0"})
     with pytest.raises(cg.TokenExpired):
         await getattr(cg, method)(cg_token, *args)
     assert len(respx.calls) == 1
@@ -134,12 +124,8 @@ async def test_expired_followed_problem_page(cg_token):
 
 @respx.mock
 async def test_expired_course_context_stops_assignment_query(cg_token):
-    respx.get(BASE_URL + "/courselist.jsp").respond(
-        302, headers={"location": "/main.jsp"}
-    )
-    respx.get(BASE_URL + "/main.jsp").respond(
-        302, headers={"location": "/indexcs/simple.jsp"}
-    )
+    respx.get(BASE_URL + "/courselist.jsp").respond(302, headers={"location": "/main.jsp"})
+    respx.get(BASE_URL + "/main.jsp").respond(302, headers={"location": "/indexcs/simple.jsp"})
     with pytest.raises(cg.TokenExpired):
         await cg.get_assignment_list(cg_token, 1001)
     assert len(respx.calls) == 2
@@ -175,9 +161,7 @@ async def test_http_errors(cg_token, status):
 
 @respx.mock
 async def test_network_error(cg_token):
-    respx.get(BASE_URL + "/courselist.jsp").mock(
-        side_effect=httpx.ConnectError("offline")
-    )
+    respx.get(BASE_URL + "/courselist.jsp").mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(cg.CgNetworkError):
         await cg.get_course_list(cg_token)
 

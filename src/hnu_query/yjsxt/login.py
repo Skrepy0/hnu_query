@@ -8,7 +8,9 @@ from ._http import request
 from .exceptions import YjsxtLoginError
 from .token import YjsxtToken
 
-YJSXT_FROM_CAS_URL = "http://cas.hnu.edu.cn/cas/login?service=http://yjsxt.hnu.edu.cn/gmis/oauthLogin/hndxnew?ywdm="
+YJSXT_FROM_CAS_URL = (
+    "http://cas.hnu.edu.cn/cas/login?service=http://yjsxt.hnu.edu.cn/gmis/oauthLogin/hndxnew?ywdm="
+)
 
 
 def _check_target(url: str) -> None:
@@ -39,8 +41,6 @@ async def acquire_by_cas_login(cas_token: CasToken) -> YjsxtToken:
         response = await request(client, "GET", target, login=True)
         redirect = response.headers.get("location", "")
         if "/home/err" in redirect:
-            message = parse_qs(urlsplit(redirect).query, keep_blank_values=True).get(
-                "msg", [""]
-            )[0]
+            message = parse_qs(urlsplit(redirect).query, keep_blank_values=True).get("msg", [""])[0]
             raise YjsxtLoginError(message or "该账号无法访问研究生系统")
     return YjsxtToken(id)

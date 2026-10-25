@@ -95,9 +95,7 @@ def test_explicit_class_overrides_rank(gym_data):
     summary = gym_data("getStudentScore.json")
     summary["data"]["50m_class"] = "green"
     assert (
-        parse.grade(
-            json.dumps(summary), json.dumps(gym_data("getEyeDetails.json"))
-        ).short_run.color
+        parse.grade(json.dumps(summary), json.dumps(gym_data("getEyeDetails.json"))).short_run.color
         is GradeItemColor.Green
     )
 
@@ -145,9 +143,7 @@ def test_appointments(appointments):
     assert parse.appointment_list('{"info":"成功","status":1,"data":[]}') == []
 
 
-@pytest.mark.parametrize(
-    "key,value", [("class_id", "42"), ("class_id", -1), ("class_name", None)]
-)
+@pytest.mark.parametrize("key,value", [("class_id", "42"), ("class_id", -1), ("class_name", None)])
 def test_invalid_appointments(appointments, key, value):
     appointments["data"][0][key] = value
     with pytest.raises(GymParseError):

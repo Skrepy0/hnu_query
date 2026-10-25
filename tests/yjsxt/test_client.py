@@ -11,9 +11,9 @@ from hnu_query.yjsxt._http import BASE_URL
 
 @respx.mock
 async def test_semester_session_id_in_url(yjsxt_token, yjsxt_text):
-    route = respx.get(
-        BASE_URL + "/gmis/(S(test-session))/student/default/bindterm"
-    ).respond(200, text=yjsxt_text("bindterm.json"))
+    route = respx.get(BASE_URL + "/gmis/(S(test-session))/student/default/bindterm").respond(
+        200, text=yjsxt_text("bindterm.json")
+    )
     semesters = await yjsxt.get_semester(yjsxt_token)
     assert len(semesters) == 56
     request = route.calls.last.request
@@ -24,9 +24,9 @@ async def test_semester_session_id_in_url(yjsxt_token, yjsxt_text):
 
 @respx.mock
 async def test_class_table_form_and_session_path(yjsxt_token, yjsxt_text):
-    route = respx.post(
-        BASE_URL + "/gmis/(S(test-session))/student/pygl/py_kbcx_ew"
-    ).respond(200, text=yjsxt_text("py_kbcx_ew.json"))
+    route = respx.post(BASE_URL + "/gmis/(S(test-session))/student/pygl/py_kbcx_ew").respond(
+        200, text=yjsxt_text("py_kbcx_ew.json")
+    )
     result = await yjsxt.get_class_table(yjsxt_token, "63&other=1")
     assert len(result) == 5
     request = route.calls.last.request
@@ -55,9 +55,7 @@ async def test_class_table_form_and_session_path(yjsxt_token, yjsxt_text):
 )
 @respx.mock
 async def test_http_errors(yjsxt_token, method, verb, path, args, status, error):
-    respx.route(method=verb, url=BASE_URL + "/gmis/(S(test-session))" + path).respond(
-        status
-    )
+    respx.route(method=verb, url=BASE_URL + "/gmis/(S(test-session))" + path).respond(status)
     with pytest.raises(error):
         await getattr(yjsxt, method)(yjsxt_token, *args)
 

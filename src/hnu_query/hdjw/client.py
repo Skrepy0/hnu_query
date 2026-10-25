@@ -32,9 +32,7 @@ def semester(xn: int, xq: int) -> str:
     return f"{xn}-{xn + 1}-{xq}"
 
 
-async def request(
-    client: httpx.AsyncClient, method: str, url: str, **kwargs
-) -> httpx.Response:
+async def request(client: httpx.AsyncClient, method: str, url: str, **kwargs) -> httpx.Response:
     try:
         response = await client.request(method, url, follow_redirects=False, **kwargs)
     except httpx.RequestError as exc:
@@ -47,9 +45,7 @@ async def request(
 class HdjwClient:
     """使用 ``async with`` 自动释放连接；注入的 client 由调用者负责关闭。"""
 
-    def __init__(
-        self, token: HdjwToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: HdjwToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
@@ -64,11 +60,7 @@ class HdjwClient:
         )
         if response.is_redirect:
             location = response.headers.get("location", "").lower()
-            if (
-                "cas/login" in location
-                or "xk/login" in location
-                or "login.jsp" in location
-            ):
+            if "cas/login" in location or "xk/login" in location or "login.jsp" in location:
                 raise TokenExpired("教务会话已过期")
             raise HdjwStatusError(response.status_code, "非预期重定向")
         return response.text

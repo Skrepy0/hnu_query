@@ -2,21 +2,17 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build.targets.sdist]
-include = ["/src", "/tests", "/docs", "/scripts", "/README.md", "/LICENSE", "/pyproject.toml", "/uv.lock"]
-
 [project]
 name = "hnu_query"
 version = "0.1.0"
 description = "湖南大学校内系统查询库，将湖南大学的校内系统（如个人门户，教务系统等）的接口进行包装，提供一套获取结构化数据的能力。"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "AGPL-3.0-only" }
+license = "AGPL-3.0-only"
 authors = [{ name = "Skrepy", email = "skrepy@hnu.edu.cn" }]
 keywords = ["HNU", "query"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
 ]
 
 dependencies = [
@@ -26,26 +22,61 @@ dependencies = [
     "pdfplumber>=0.11.8",
     "pydantic>=2.13.5",
     "requests>=2.28",
-    "respx>=0.23.1",
     "selectolax>=0.4.12",
 ]
-
-[project.optional-dependencies]
-dev = ["pytest", "pytest-asyncio", "ruff", "mypy", "build", "twine"]
 
 [project.urls]
 Homepage = "https://github.com/Skrepy0/hnu_query"
 Issues = "https://github.com/Skrepy0/hnu_query/issues"
 
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=1.2.0",
+    "respx>=0.23.1",
+    "mypy>=1.10",
+    "ruff>=0.5",
+    "poethepoet>=0.49.0",
+    "build",
+    "twine",
+]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/docs", "/scripts", "/README.md", "/LICENSE"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hnu_query"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "-v --strict-markers"
+addopts = "-v --strict-markers -m 'not live' --basetemp=.local/pytest"
 markers = [
-    "asyncio: mark test as async (provided by pytest-asyncio)",
+    "live: 发起真实校园网请求，需要通过 --env-file .env 提供账号和参数",
 ]
 
-[dependency-groups]
-dev = [
-    "pytest-asyncio>=1.2.0",
-]
+[tool.poe.tasks]
+test = "pytest"
+test-live = "pytest -m live -s tests/live"
+lint = "ruff check ."
+format = "ruff format ."
+fmt-check = "ruff format --check ."
+typecheck = "mypy src"
+check = ["lint", "fmt-check", "typecheck", "test"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests", "scripts", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]

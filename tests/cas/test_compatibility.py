@@ -30,9 +30,7 @@ def test_rust_tfa_sample():
 @pytest.mark.parametrize("status", [301, 303, 307, 308, 201, 204])
 @respx.mock
 async def test_ticket_only_accepts_302(cas_token, status):
-    route = respx.get(SERVICE_URL).respond(
-        status, headers={"location": "https://example.org"}
-    )
+    route = respx.get(SERVICE_URL).respond(status, headers={"location": "https://example.org"})
     with pytest.raises(CasStatusError):
         await get_ticket_url(cas_token, SERVICE_URL)
     assert route.call_count == 1
@@ -59,9 +57,7 @@ async def test_other_tfa_redirects_are_not_success(status):
 @respx.mock
 async def test_tfa_request_and_cookie_replacement():
     token = TFAToken("114514", "exec", "TGC=old; route=one", "student", "password")
-    route = respx.post(LOGIN_URL).respond(
-        302, headers={"set-cookie": "TGC=new; Path=/"}
-    )
+    route = respx.post(LOGIN_URL).respond(302, headers={"set-cookie": "TGC=new; Path=/"})
     status, cas = await token.verify("123456")
     assert status == "success"
     assert cas.cookie == "TGC=new; route=one"
@@ -78,9 +74,7 @@ async def test_tfa_request_and_cookie_replacement():
 @respx.mock
 async def test_sms_request_uses_tfa_cookie():
     token = TFAToken("114514", "exec", "session=fake", "student", "password")
-    route = respx.get(SMS_URL, params={"reloginType": "reloginPhone"}).respond(
-        text="valid"
-    )
+    route = respx.get(SMS_URL, params={"reloginType": "reloginPhone"}).respond(text="valid")
     assert await token.send_sms() == "valid"
     assert route.calls.last.request.headers["cookie"] == token.cookie
 

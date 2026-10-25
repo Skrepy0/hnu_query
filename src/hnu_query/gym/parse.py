@@ -142,11 +142,7 @@ def grade(summary_str: str, detail_str: str) -> Grade:
         color = summary.get(source + "_class")
         if color is not None and not isinstance(color, str):
             raise GymParseError("体测等级颜色应为字符串或 null")
-        red = (
-            color == "red"
-            if color is not None
-            else rank in ("不及格", "缺项", "肥胖", "超重")
-        )
+        red = color == "red" if color is not None else rank in ("不及格", "缺项", "肥胖", "超重")
         key = source + "_score"
         if key not in summary:
             raise GymParseError(f"体测摘要缺少 {key}")
@@ -156,7 +152,9 @@ def grade(summary_str: str, detail_str: str) -> Grade:
             measured = "0"
         if measured is None:
             if source == "bmi":
-                measured = f"{_field(detail, 'height', str)}厘米/{_field(detail, 'weight', str)}千克"
+                measured = (
+                    f"{_field(detail, 'height', str)}厘米/{_field(detail, 'weight', str)}千克"
+                )
             elif source == "run":
                 measured = _run_time(_field(detail, "run", str))
             else:
@@ -187,6 +185,14 @@ def grade(summary_str: str, detail_str: str) -> Grade:
         grade=_field(detail, "total_grade", str),
         score=_field(detail, "total_score", float),
         eye=eye,
-        **reports,
-        **items,
+        report_desc=reports["report_desc"],
+        report_status=reports["report_status"],
+        report_type=reports["report_type"],
+        short_run=items["short_run"],
+        bmi=items["bmi"],
+        jump=items["jump"],
+        pull_and_sit=items["pull_and_sit"],
+        run=items["run"],
+        sit_and_reach=items["sit_and_reach"],
+        vc=items["vc"],
     )

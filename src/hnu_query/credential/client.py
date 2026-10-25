@@ -57,9 +57,7 @@ class CaClient:
             "xfjd": "",
             "xzkc": "",
         }
-        resp = await self._request(
-            "GET", "/student/student/caTemplate/preview_file", params=params
-        )
+        resp = await self._request("GET", "/student/student/caTemplate/preview_file", params=params)
         return resp.text
 
     async def file(self, file_name: str) -> bytes:
@@ -70,9 +68,7 @@ class CaClient:
         Args:
             file_name: 文件名，来自 ``preview_file`` 返回 JSON 的解析结果。
         """
-        resp = await self._request(
-            "GET", f"/student/sys/common/view/{quote(file_name, safe='/')}"
-        )
+        resp = await self._request("GET", f"/student/sys/common/view/{quote(file_name, safe='/')}")
         return resp.content
 
     # ---------- 内部 ----------
@@ -101,15 +97,11 @@ class CaClient:
             is_ca = target.hostname == "ca.hnu.edu.cn" and port in (None, 443)
             headers = dict(self._token.headers) if is_ca else {}
             try:
-                request = self._client.build_request(
-                    method, current, headers=headers, **kwargs
-                )
+                request = self._client.build_request(method, current, headers=headers, **kwargs)
                 if not is_ca:
                     for name in ("X-Access-Token", "Cookie", "Authorization"):
                         request.headers.pop(name, None)
-                resp = await self._client.send(
-                    request, follow_redirects=False, auth=None
-                )
+                resp = await self._client.send(request, follow_redirects=False, auth=None)
             except httpx.RequestError as e:
                 raise CaNetworkError("凭证网络请求失败") from e
             if resp.is_redirect:

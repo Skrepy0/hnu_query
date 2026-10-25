@@ -50,9 +50,7 @@ from hnu_query.iportal._http import BASE_URL
     ],
 )
 @respx.mock
-async def test_public_queries(
-    iportal_token, iportal_data, method, path, fixture, args, params
-):
+async def test_public_queries(iportal_token, iportal_data, method, path, fixture, args, params):
     route = respx.get(BASE_URL + path).respond(200, json=iportal_data(fixture))
     result = await getattr(iportal, method)(iportal_token, *args)
     assert result is not None
@@ -65,9 +63,9 @@ async def test_public_queries(
 @respx.mock
 async def test_personal_data_queries(iportal_token, iportal_data):
     ids = iportal_data("personal/ids.json")
-    respx.get(
-        BASE_URL + "/personal/frontend/data/items", params={"type": "personal_data"}
-    ).respond(200, json=ids)
+    respx.get(BASE_URL + "/personal/frontend/data/items", params={"type": "personal_data"}).respond(
+        200, json=ids
+    )
     files = {
         "book.bookNum": "lib",
         "mail.unread": "email",
@@ -76,9 +74,7 @@ async def test_personal_data_queries(iportal_token, iportal_data):
         "net.used": "net",
     }
     for item in ids["d"]["data"]:
-        respx.get(
-            BASE_URL + "/personal/frontend/data/detail", params={"id": item["id"]}
-        ).respond(
+        respx.get(BASE_URL + "/personal/frontend/data/detail", params={"id": item["id"]}).respond(
             200,
             json=iportal_data("personal/id_data/" + files[item["key"]] + ".json"),
         )
@@ -86,9 +82,7 @@ async def test_personal_data_queries(iportal_token, iportal_data):
     assert result.balance == 81.81 and result.mail_unread == 1
     assert result.net_used == 114514 * 1024**3
     assert len(respx.calls) == 6
-    assert all(
-        call.request.headers["cookie"] == "session=iportal-test" for call in respx.calls
-    )
+    assert all(call.request.headers["cookie"] == "session=iportal-test" for call in respx.calls)
 
 
 @respx.mock
@@ -201,9 +195,7 @@ async def test_invalid_date_range(iportal_token, start, end):
 async def test_connection_ownership(iportal_token):
     def handler(request):
         assert request.headers["cookie"] == "session=iportal-test"
-        return httpx.Response(
-            200, json={"e": 0, "d": {"account": "id", "balance": 10.0}}
-        )
+        return httpx.Response(200, json={"e": 0, "d": {"account": "id", "balance": 10.0}})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
         async with iportal.IPortalClient(iportal_token, client=http) as client:

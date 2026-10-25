@@ -176,10 +176,7 @@ def test_empty_classroom(fixture_text):
         "exam_seat_count": 51,
     }
     # 响应只含选中的大节列：选第 5 大节也要从第 1 列开始检查。
-    assert (
-        len(parse.empty_classroom('[0,0,0,0,[["A",null,"","(10/5)","教室"]]]', [5]))
-        == 1
-    )
+    assert len(parse.empty_classroom('[0,0,0,0,[["A",null,"","(10/5)","教室"]]]', [5])) == 1
 
 
 PARSERS = [
@@ -200,9 +197,7 @@ def test_expired_session(parser):
 
 
 @pytest.mark.parametrize("parser", PARSERS)
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", "null", "{}", '{"data": [null]}']
-)
+@pytest.mark.parametrize("body", ["<html>login</html>", "null", "{}", '{"data": [null]}'])
 def test_malformed_response(parser, body):
     with pytest.raises(HdjwParseError):
         parser(body)

@@ -22,16 +22,14 @@ def _merge_cookies(cookies: dict[str, str], response: httpx.Response) -> None:
 async def acquire_by_cas_login(cas_token: CasToken) -> HdjwToken:
     """按 Rust 的 SSO 流程预取 Cookie、兑换票据、访问最终重定向。"""
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
-        cookies = {}
+        cookies: dict[str, str] = {}
         response = await request(client, "GET", HDJW_ENTER_URL)
         _merge_cookies(cookies, response)
         if not cookies:
             raise HdjwLoginError("教务登录入口未返回会话 Cookie")
 
         def headers():
-            return {
-                "Cookie": "; ".join(f"{key}={value}" for key, value in cookies.items())
-            }
+            return {"Cookie": "; ".join(f"{key}={value}" for key, value in cookies.items())}
 
         ticket_url = await get_ticket_url(cas_token, HDJW_FROM_CAS_URL)
         response = await request(client, "GET", ticket_url, headers=headers())

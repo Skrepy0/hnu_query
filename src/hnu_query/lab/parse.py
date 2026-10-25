@@ -170,16 +170,16 @@ def lab_grade(grade_str: str, detail_str: str, structure_str: str) -> list[LabGr
         )
         result.append(item)
         labs[lab_id] = item
-    for row in details:
+    for detail in details:
         if (
-            row.LabStructureScore is not None
-            and row.LabID in labs
-            and row.LabScoreStructureID in structures
+            detail.LabStructureScore is not None
+            and detail.LabID in labs
+            and detail.LabScoreStructureID in structures
         ):
-            labs[row.LabID].details.append(
+            labs[detail.LabID].details.append(
                 LabGradeDetailItem(
-                    name=structures[row.LabScoreStructureID],
-                    score=row.LabStructureScore,
+                    name=structures[detail.LabScoreStructureID],
+                    score=detail.LabStructureScore,
                 )
             )
     return result
@@ -190,7 +190,5 @@ def virtual_lab_grade(body: str) -> list[VirtualLabGrade]:
     unique = {}
     for row in _rows(body, _VirtualGrade, ("rows",)):
         if row.LabName not in unique:
-            unique[row.LabName] = VirtualLabGrade(
-                lab_name=row.LabName, score=row.LabScore or None
-            )
+            unique[row.LabName] = VirtualLabGrade(lab_name=row.LabName, score=row.LabScore or None)
     return [unique[name] for name in sorted(unique)]

@@ -112,9 +112,7 @@ def test_net_fallback_and_cast(value, expected):
 
 def test_invalid_last_login_is_none_and_title_alias():
     body = '{"e":0,"d":{"data":{"title":"登录时间","value":"invalid"}}}'
-    assert (
-        parse.personal_data([("statistic.lastLoginTime", body)]).last_login_time is None
-    )
+    assert parse.personal_data([("statistic.lastLoginTime", body)]).last_login_time is None
     body = '{"e":0,"d":{"data":{"title":"图书","value":"3"}}}'
     assert parse.personal_data([("book.bookNum", body)]).lib_borrow == 3
 
@@ -128,13 +126,9 @@ def test_invalid_personal_value(value):
 
 def test_unknown_personal_key():
     with pytest.raises(IPortalParseError):
-        parse.personal_data_query_ids(
-            '{"e":0,"d":{"data":[{"key":"unknown","id":"x"}]}}'
-        )
+        parse.personal_data_query_ids('{"e":0,"d":{"data":[{"key":"unknown","id":"x"}]}}')
     with pytest.raises(IPortalParseError):
-        parse.personal_data(
-            [("unknown", '{"e":0,"d":{"data":{"name":"x","value":1}}}')]
-        )
+        parse.personal_data([("unknown", '{"e":0,"d":{"data":{"name":"x","value":1}}}')])
 
 
 def test_term_rust_fixture(iportal_text):
@@ -169,9 +163,7 @@ def test_card_rust_fixtures(iportal_text):
         "balance": 1919.81,
     }
     result = parse.card_transaction_records(iportal_text("card/transactions.json"))
-    assert (
-        result.has_next_page and result.total_count == 11 and len(result.records) == 10
-    )
+    assert result.has_next_page and result.total_count == 11 and len(result.records) == 10
     assert result.records[0].model_dump() == {
         "merchant_name": "天马二食堂二楼",
         "merchant_account": 1000006,

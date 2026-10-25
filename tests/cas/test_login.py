@@ -4,12 +4,12 @@ import respx
 
 from hnu_query.cas import acquire_by_login
 from hnu_query.cas.exceptions import (
+    AccountLocked,
     CasNetworkError,
     CasParseError,
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
-    AccountLocked,
     TFARequired,
 )
 from tests.conftest import PUBKEY_URL, SERVICE_URL
@@ -177,9 +177,7 @@ async def test_login_pubkey_invalid_json():
 @respx.mock
 async def test_login_password_encrypted():
     """确认提交的是 RSA 加密后的密码，不是明文。"""
-    route_login_page = respx.get(SERVICE_URL).mock(
-        return_value=httpx.Response(200, text=LOGIN_HTML)
-    )
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
     respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
     route_post = respx.post(SERVICE_URL).mock(
         return_value=httpx.Response(

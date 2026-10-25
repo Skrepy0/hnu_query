@@ -73,9 +73,7 @@ async def test_session_and_login_form_cookie_flow():
 )
 @respx.mock
 async def test_login_business_errors(location, error):
-    route = respx.post(BASE_URL + LOGIN_URL).respond(
-        302, headers={"location": location}
-    )
+    route = respx.post(BASE_URL + LOGIN_URL).respond(302, headers={"location": location})
     with pytest.raises(error) as caught:
         await CgSession({"Cookie": "JSESSIONID=initial"}, b"image").login(
             "student", "password", "code"

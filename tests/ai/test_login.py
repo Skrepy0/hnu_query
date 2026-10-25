@@ -91,10 +91,7 @@ async def test_reject_foreign_or_insecure_redirect(cas_token, location):
 async def test_redirect_limit_even_if_final_url_has_code(cas_token):
     route = respx.get(INITIAL_AUTH_URL).mock(
         side_effect=[
-            *[
-                httpx.Response(302, headers={"location": INITIAL_AUTH_URL})
-                for _ in range(9)
-            ],
+            *[httpx.Response(302, headers={"location": INITIAL_AUTH_URL}) for _ in range(9)],
             httpx.Response(302, headers={"location": CALLBACK}),
         ]
     )

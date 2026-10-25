@@ -5,10 +5,7 @@ from hnu_query.credential import CaToken
 
 CAS_BASE = "http://cas.hnu.edu.cn"
 PUBKEY_URL = f"{CAS_BASE}/cas/v2/getPubKey"
-SERVICE_URL = (
-    f"{CAS_BASE}/cas/login"
-    "?service=http://cas.hnu.edu.cn/system/login/login.zf"
-)
+SERVICE_URL = f"{CAS_BASE}/cas/login?service=http://cas.hnu.edu.cn/system/login/login.zf"
 
 
 @pytest.fixture

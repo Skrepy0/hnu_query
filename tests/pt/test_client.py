@@ -66,9 +66,7 @@ async def test_public_gets(pt_token, pt_data, method, path, fixture, expected):
     ],
 )
 @respx.mock
-async def test_card_history_csrf_and_form(
-    pt_token, pt_data, history_type, code, fixture, total
-):
+async def test_card_history_csrf_and_form(pt_token, pt_data, history_type, code, fixture, total):
     csrf = respx.get(CSRF_URL).respond(200, json={"data": "csrf&+token"})
     history = respx.post(HISTORY_URL).respond(200, json=pt_data(fixture))
     result = await pt.get_card_history(pt_token, 2026, 2, history_type)
@@ -110,9 +108,7 @@ async def test_csrf_refreshed_per_query_and_overrides_stale_header(pt_data):
     assert token.headers["x-xsrf-token"] == "old"
 
 
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", '{"data":null}', '{"data":123}']
-)
+@pytest.mark.parametrize("body", ["<html>login</html>", '{"data":null}', '{"data":123}'])
 @respx.mock
 async def test_bad_csrf_prevents_history_request(pt_token, body):
     respx.get(CSRF_URL).respond(200, text=body)

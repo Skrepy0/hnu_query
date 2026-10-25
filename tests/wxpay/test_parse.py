@@ -81,9 +81,7 @@ from hnu_query.xgxt import Dormitory, parse_dormitory
     ],
 )
 def test_rust_building_codes(park, build, expected):
-    park_id, building_id, room = convert_dormitory(
-        Dormitory.from_parsed_value(park, build, "101")
-    )
+    park_id, building_id, room = convert_dormitory(Dormitory.from_parsed_value(park, build, "101"))
     assert building_id == expected
     assert (
         park_id
@@ -138,9 +136,7 @@ def test_unparsed_and_unknown_dormitories():
 
 
 def test_rust_electricity_fixture():
-    body = (Path(__file__).parent / "fixtures/checkRoomNo.json").read_text(
-        encoding="utf-8"
-    )
+    body = (Path(__file__).parent / "fixtures/checkRoomNo.json").read_text(encoding="utf-8")
     assert electricity(body) == "283.75度"
     assert electricity('{"data":{"Balance":"12.34元"}}') == "12.34元"
 

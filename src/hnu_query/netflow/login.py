@@ -7,21 +7,19 @@ from ._http import request
 from .exceptions import NetflowLoginError
 from .token import NetflowToken
 
-NETFLOW_URL = (
-    "http://cas.hnu.edu.cn/application/sso.zf?login=B5712DC2FA281C96E053026B3E0A80A6"
-)
+NETFLOW_URL = "http://cas.hnu.edu.cn/application/sso.zf?login=B5712DC2FA281C96E053026B3E0A80A6"
 
 
 async def acquire_by_cas_login(cas_token: CasToken) -> NetflowToken:
     """兑换 CAS s_ticket；沿用 Rust 的 GET 表单正文和首尾 Cookie 选择。"""
-    s_ticket, cookies = await get_sticket(cas_token, NETFLOW_URL)
+    s_ticket, cas_cookies = await get_sticket(cas_token, NETFLOW_URL)
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
         response = await request(
             client,
             "GET",
             "/login/validate",
             allow_redirect=True,
-            headers={"Cookie": cookies},
+            headers={"Cookie": cas_cookies},
             data={
                 "s_ticket": s_ticket,
                 "login_id": cas_token.stu_id,

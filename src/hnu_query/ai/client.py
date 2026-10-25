@@ -40,9 +40,7 @@ class AiClient:
     async def create_token(self, name: str) -> None:
         if not isinstance(name, str):
             raise ValueError("Token 名称必须是字符串")
-        text = await self._text(
-            "POST", "/api/apply-token", json={"name": name, "quota": 2000000}
-        )
+        text = await self._text("POST", "/api/apply-token", json={"name": name, "quota": 2000000})
         if not parse.check_action_success(text):
             raise AiActionError("创建 Token 失败")
 

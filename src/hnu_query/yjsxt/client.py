@@ -9,9 +9,7 @@ from .token import YjsxtToken
 class YjsxtClient:
     """复用连接的研究生客户端；注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: YjsxtToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: YjsxtToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None

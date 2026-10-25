@@ -1,7 +1,7 @@
 import base64
 import inspect
 from collections.abc import Awaitable, Callable
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 import httpx
 from cryptography.hazmat.primitives import padding
@@ -24,6 +24,7 @@ LOGIN_PATH = "/BaseInfo/Login/ValidateLogin"
 CAPTCHA_PATH = "/Ashx/CheckCode.ashx?t=0.29911677684547566"
 
 
+@runtime_checkable
 class CaptchaResolver(Protocol):
     """与 Rust trait 对齐；也可直接传入同步或异步函数。"""
 
@@ -44,7 +45,7 @@ def lab_encrypt(password: str) -> str:
 
 async def _resolve(resolver: Resolver, data: bytes) -> str:
     try:
-        callback = getattr(resolver, "resolve", resolver)
+        callback = resolver.resolve if isinstance(resolver, CaptchaResolver) else resolver
         code = callback(data)
         if inspect.isawaitable(code):
             code = await code
@@ -70,7 +71,7 @@ async def acquire_by_login(
         raise ValueError("max_tried 必须为非负整数")
     encrypted = lab_encrypt(password)
     checkcode = ""
-    cookies = {}
+    cookies: dict[str, str] = {}
 
     def headers():
         return {"Cookie": "; ".join(f"{key}={value}" for key, value in cookies.items())}

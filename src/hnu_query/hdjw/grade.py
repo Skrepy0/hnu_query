@@ -10,8 +10,6 @@ async def get_grade(hdjw_token: HdjwToken, xn: int, xq: int) -> list[Grade]:
         return await client.get_grade(xn, xq)
 
 
-async def get_grade_detail(
-    hdjw_token: HdjwToken, jx0404id: str
-) -> list[GradeDetailItem]:
+async def get_grade_detail(hdjw_token: HdjwToken, jx0404id: str) -> list[GradeDetailItem]:
     async with HdjwClient(hdjw_token) as client:
         return await client.get_grade_detail(jx0404id)

@@ -18,9 +18,7 @@ async def get_course_list(token: CgToken) -> list[CgCourse] | None:
         return await client.get_course_list()
 
 
-async def get_assignment_list(
-    token: CgToken, course_id: int
-) -> list[CgAssignment] | None:
+async def get_assignment_list(token: CgToken, course_id: int) -> list[CgAssignment] | None:
     async with CgClient(token) as client:
         return await client.get_assignment_list(course_id)
 

@@ -159,12 +159,8 @@ def test_virtual_grade_sort_dedup_first_wins():
     ]
 
 
-@pytest.mark.parametrize(
-    "parser", [parse.course_list, parse.lab_schedule, parse.virtual_lab_grade]
-)
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", "null", "[]", "{}", '{"rows":[null]}']
-)
+@pytest.mark.parametrize("parser", [parse.course_list, parse.lab_schedule, parse.virtual_lab_grade])
+@pytest.mark.parametrize("body", ["<html>login</html>", "null", "[]", "{}", '{"rows":[null]}'])
 def test_malformed_rows(parser, body):
     with pytest.raises(LabParseError):
         parser(body)
@@ -175,6 +171,4 @@ def test_empty_results():
     assert parse.course_list('{"rows":[]}') == []
     assert parse.lab_schedule('{"rows":[]}') == []
     assert parse.virtual_lab_grade('{"rows":[]}') == []
-    assert (
-        parse.lab_grade('{"rows":[]}', '{"Data":{"Lablist":[]}}', '{"Data":[]}') == []
-    )
+    assert parse.lab_grade('{"rows":[]}', '{"Data":{"Lablist":[]}}', '{"Data":[]}') == []

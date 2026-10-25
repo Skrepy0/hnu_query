@@ -19,8 +19,6 @@ async def request(
         response = await client.request(method, url, follow_redirects=False, **kwargs)
     except httpx.RequestError as exc:
         raise PtNetworkError("个人门户网络请求失败") from exc
-    if not 200 <= response.status_code < 300 and not (
-        allow_redirect and response.is_redirect
-    ):
+    if not 200 <= response.status_code < 300 and not (allow_redirect and response.is_redirect):
         raise PtStatusError(response.status_code)
     return response

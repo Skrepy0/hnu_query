@@ -9,9 +9,7 @@ from .token import PtToken
 class PtClient:
     """复用连接的异步个人门户客户端；注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: PtToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: PtToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
@@ -26,9 +24,7 @@ class PtClient:
         return response.text
 
     async def get_card_info(self) -> CardInfo:
-        return parse.card_info(
-            await self._text("GET", "/api/hndxYkt/getCardUserInfo/info")
-        )
+        return parse.card_info(await self._text("GET", "/api/hndxYkt/getCardUserInfo/info"))
 
     async def get_card_history(
         self, year: int, month: int, history_type: CardHistoryType
@@ -55,9 +51,7 @@ class PtClient:
 
     async def get_unread_email_count(self) -> int | None:
         """返回未读数，None 表示尚未绑定邮箱。"""
-        return parse.email_unread_count(
-            await self._text("GET", "/api/v1/email/unRead/count")
-        )
+        return parse.email_unread_count(await self._text("GET", "/api/v1/email/unRead/count"))
 
     async def aclose(self) -> None:
         if self._owns_client:

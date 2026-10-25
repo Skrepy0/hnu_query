@@ -20,9 +20,7 @@ def _check_date(year: int, month: int, day: int = 1) -> None:
 class NetflowClient:
     """复用连接的异步流量客户端；调用方注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: NetflowToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: NetflowToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
@@ -58,9 +56,7 @@ class NetflowClient:
         return parse.overdue_payment(await self._text("/api/v1/pay/getpayinfo"))
 
     async def get_this_month_info(self) -> ThisMonthInfo:
-        return parse.this_month_info(
-            await self._text("/api/v1/history/gettrafficinfobythismonth")
-        )
+        return parse.this_month_info(await self._text("/api/v1/history/gettrafficinfobythismonth"))
 
     async def get_unlock_status(self) -> UnlockStatus:
         return parse.unlock_status(await self._text("/api/v1/account/getuserinfo"))

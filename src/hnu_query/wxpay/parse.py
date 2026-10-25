@@ -86,12 +86,15 @@ BUILDING_IDS = {
 
 
 def convert_dormitory(dormitory: Dormitory) -> tuple[int, str, str]:
-    if not isinstance(dormitory, Dormitory) or not dormitory.successfully_parsed():
+    if not isinstance(dormitory, Dormitory):
         raise ValueError("dormitory 必须成功解析出园区和楼栋")
-    park = PARK_IDS.get(dormitory.park)
+    park_name, build = dormitory.park, dormitory.build
+    if park_name is None or build is None:
+        raise ValueError("dormitory 必须成功解析出园区和楼栋")
+    park = PARK_IDS.get(park_name)
     if park is None:
         raise WxpayParseError("未知宿舍园区")
-    build, room = dormitory.build, dormitory.room
+    room = dormitory.room
     if park == 1 and build == "19舍":
         if not room or room[0] not in "1234":
             raise WxpayParseError("南校区 19 舍房间号前缀应为 1–4")
@@ -99,16 +102,15 @@ def convert_dormitory(dormitory: Dormitory) -> tuple[int, str, str]:
         parts = room.split("-")
         if len(parts) != 2:
             raise WxpayParseError("南校区 19 舍房间号应为 分区-房间号")
-        room_id = (
-            "F" + parts[1].replace("附", "") if parts[1].startswith("附") else parts[1]
-        )
+        room_id = "F" + parts[1].replace("附", "") if parts[1].startswith("附") else parts[1]
         return park, build_id, room_id
     if park == 5:
         build_id = "18"
     else:
-        build_id = BUILDING_IDS.get(park, {}).get(build)
-        if build_id is None:
+        mapped_build_id = BUILDING_IDS.get(park, {}).get(build)
+        if mapped_build_id is None:
             raise WxpayParseError("未知宿舍楼栋")
+        build_id = mapped_build_id
     if park == 4 and build in {
         "2栋",
         "5栋",

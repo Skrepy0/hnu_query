@@ -12,9 +12,7 @@ from hnu_query.xgxt import (
 )
 from hnu_query.xgxt.login import XGXT_URL
 
-TICKET = (
-    "http://xgxt.hnu.edu.cn/zftal-xgxt-web/teacher/xtgl/index/check.zf?ticket=ST-test"
-)
+TICKET = "http://xgxt.hnu.edu.cn/zftal-xgxt-web/teacher/xtgl/index/check.zf?ticket=ST-test"
 
 
 @respx.mock

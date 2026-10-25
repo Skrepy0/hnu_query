@@ -28,6 +28,4 @@ async def get_card_transaction_records(
     page: int,
 ) -> CardTransactionDetail:
     async with IPortalClient(token) as client:
-        return await client.get_card_transaction_records(
-            account, start, end, page_size, page
-        )
+        return await client.get_card_transaction_records(account, start, end, page_size, page)

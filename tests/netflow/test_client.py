@@ -101,18 +101,14 @@ async def test_http_error(netflow_token, status):
 
 @respx.mock
 async def test_network_error(netflow_token):
-    respx.get(BASE_URL + "/api/v1/pay/getpayinfo").mock(
-        side_effect=httpx.ConnectError("offline")
-    )
+    respx.get(BASE_URL + "/api/v1/pay/getpayinfo").mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(netflow.NetflowNetworkError):
         await netflow.get_overdue_payment(netflow_token)
 
 
 @respx.mock
 async def test_login_html_is_parse_error(netflow_token):
-    respx.get(BASE_URL + "/api/v1/pay/getpayinfo").respond(
-        200, text="<html>login</html>"
-    )
+    respx.get(BASE_URL + "/api/v1/pay/getpayinfo").respond(200, text="<html>login</html>")
     with pytest.raises(netflow.NetflowParseError):
         await netflow.get_overdue_payment(netflow_token)
 

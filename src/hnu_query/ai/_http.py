@@ -18,8 +18,6 @@ async def request(
         raise AiNetworkError("AI 平台网络请求失败") from exc
     if not login and response.status_code in (301, 302, 303, 307, 308, 401, 403):
         raise TokenExpired("AI 平台会话失效或无访问权限")
-    if not 200 <= response.status_code < 300 and not (
-        login and response.status_code in (302, 303)
-    ):
+    if not 200 <= response.status_code < 300 and not (login and response.status_code in (302, 303)):
         raise AiStatusError(response.status_code)
     return response

@@ -4,8 +4,8 @@ from hnu_query.credential import preview_file_name
 from hnu_query.credential.exceptions import CaParseError
 from hnu_query.credential.parse import _parse_rank_from_text
 
-
 # ---------- preview_file_name ----------
+
 
 def test_preview_file_name_success():
     json_str = '{"code": 200, "message": "abc123.pdf"}'

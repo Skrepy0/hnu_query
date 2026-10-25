@@ -116,7 +116,7 @@ def parse_course_info(cell_text: str) -> list[tuple[_CourseKey, set[int], str]]:
     parts = [line.strip() for line in cell_text.split("<br/>") if line.strip()]
     if not parts or not parts[0].startswith("课程编号:"):
         raise YjsxtParseError("课程块前存在无法识别的内容或缺少课程编号")
-    blocks = []
+    blocks: list[list[str]] = []
     for line in parts:
         if line.startswith("课程编号:"):
             blocks.append([])
@@ -128,8 +128,8 @@ def class_table(body: str) -> list[Course]:
     data = _json(body)
     if not isinstance(data, dict) or not isinstance(data.get("rows"), list):
         raise YjsxtParseError("无法解析研究生课表行")
-    courses = {}
-    extra_courses = {}
+    courses: dict[_CourseKey, defaultdict[tuple[int, int, str], list[int]]] = {}
+    extra_courses: dict[_CourseKey, None] = {}
     for row in data["rows"]:
         if not isinstance(row, dict) or not isinstance(row.get("mc"), str):
             raise YjsxtParseError("课表节次必须为字符串")

@@ -35,14 +35,10 @@ async def test_immediate_login_success():
     def resolver(data):
         pytest.fail("首次登录成功时不应请求验证码")
 
-    token = await lab.LabToken.acquire_by_login(
-        "202402050201", "202402050201", resolver, 3
-    )
+    token = await lab.LabToken.acquire_by_login("202402050201", "202402050201", resolver, 3)
     assert token.stu_id == "202402050201"
     assert token.headers["Cookie"] == "session=ready"
-    assert parse_qs(
-        route.calls.last.request.content.decode(), keep_blank_values=True
-    ) == {
+    assert parse_qs(route.calls.last.request.content.decode(), keep_blank_values=True) == {
         "uname": ["202402050201"],
         "pwd": ["M1laOXBibVZLeS9Qd0FvUGlnNnlmZz09"],
         "checkcode": [""],
@@ -64,9 +60,7 @@ async def test_captcha_retry_and_cookie_rotation():
                 json={"RTNCode": -2},
                 headers={"set-cookie": "session=rotated; Path=/"},
             ),
-            httpx.Response(
-                200, json={"RTNCode": 1}, headers={"set-cookie": "auth=ok; Path=/"}
-            ),
+            httpx.Response(200, json={"RTNCode": 1}, headers={"set-cookie": "auth=ok; Path=/"}),
         ]
     )
     image = respx.get(BASE_URL + CAPTCHA_PATH).respond(
@@ -104,9 +98,7 @@ async def test_captcha_exhaustion(attempts):
     route = respx.post(BASE_URL + LOGIN_PATH).respond(200, json={"RTNCode": -2})
     image = respx.get(BASE_URL + CAPTCHA_PATH).respond(200, content=b"image")
     with pytest.raises(lab.CaptchaError):
-        await lab.acquire_by_login(
-            "student", "password", lambda data: "wrong", attempts
-        )
+        await lab.acquire_by_login("student", "password", lambda data: "wrong", attempts)
     assert route.call_count == image.call_count == attempts
 
 
@@ -156,9 +148,7 @@ async def test_resolver_failure(failure):
             raise asyncio.CancelledError()
         return 123
 
-    error = (
-        asyncio.CancelledError if failure == "cancelled" else lab.CaptchaResolverError
-    )
+    error = asyncio.CancelledError if failure == "cancelled" else lab.CaptchaResolverError
     with pytest.raises(error):
         await lab.acquire_by_login("student", "password", resolver)
     assert route.call_count == 1

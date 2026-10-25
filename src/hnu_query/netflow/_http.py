@@ -14,13 +14,9 @@ async def request(
     **kwargs,
 ) -> httpx.Response:
     try:
-        response = await client.request(
-            method, BASE_URL + path, follow_redirects=False, **kwargs
-        )
+        response = await client.request(method, BASE_URL + path, follow_redirects=False, **kwargs)
     except httpx.RequestError as exc:
         raise NetflowNetworkError("校园网流量系统网络请求失败") from exc
-    if not 200 <= response.status_code < 300 and not (
-        allow_redirect and response.is_redirect
-    ):
+    if not 200 <= response.status_code < 300 and not (allow_redirect and response.is_redirect):
         raise NetflowStatusError(response.status_code)
     return response

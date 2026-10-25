@@ -11,9 +11,7 @@ from .token import LabToken
 class LabClient:
     """实验平台异步客户端；注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: LabToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: LabToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None
@@ -25,9 +23,7 @@ class LabClient:
         return response.text
 
     async def get_semester(self) -> list[Semester]:
-        body = await self._text(
-            "GET", "/Common/Common/GetSemDropDownList", params={"HasNull": "0"}
-        )
+        body = await self._text("GET", "/Common/Common/GetSemDropDownList", params={"HasNull": "0"})
         return parse.semester(body)
 
     async def get_course_list(self, semester_id: str) -> list[Course]:

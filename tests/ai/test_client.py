@@ -13,9 +13,7 @@ async def test_requests_and_rust_responses(ai_token, sample):
     routes = [
         respx.get(BASE_URL + "/api/tokens").respond(text=sample("tokens.json")),
         respx.get(BASE_URL + "/api/tokens/3296/key").respond(text=sample("key.json")),
-        respx.post(BASE_URL + "/api/apply-token").respond(
-            text=sample("apply-token.json")
-        ),
+        respx.post(BASE_URL + "/api/apply-token").respond(text=sample("apply-token.json")),
         respx.delete(BASE_URL + "/api/tokens/3296").respond(json={"success": True}),
         respx.get(BASE_URL + "/api/user-info").respond(text=sample("user-info.json")),
     ]
@@ -59,9 +57,7 @@ async def test_module_functions(ai_token, method, path, function, args, result):
     assert route.call_count == 1
 
 
-@pytest.mark.parametrize(
-    "method,args", [("create_token", ("name",)), ("delete_token", (1,))]
-)
+@pytest.mark.parametrize("method,args", [("create_token", ("name",)), ("delete_token", (1,))])
 @respx.mock
 async def test_action_failure(ai_token, method, args):
     respx.route().respond(json={"success": False})
@@ -82,9 +78,7 @@ async def test_action_failure(ai_token, method, args):
 )
 @respx.mock
 async def test_http_errors_do_not_follow_redirect(ai_token, status, error):
-    respx.get(BASE_URL + "/api/tokens").respond(
-        status, headers={"location": "https://example.org"}
-    )
+    respx.get(BASE_URL + "/api/tokens").respond(status, headers={"location": "https://example.org"})
     async with httpx.AsyncClient(follow_redirects=True) as http:
         async with ai.AiClient(ai_token, client=http) as client:
             with pytest.raises(error):

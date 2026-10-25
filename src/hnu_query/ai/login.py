@@ -25,8 +25,7 @@ def _target(url: str):
             target.scheme != "https"
             or target.username is not None
             or target.password is not None
-            or (target.hostname, 443 if target.port is None else target.port)
-            not in allowed
+            or (target.hostname, 443 if target.port is None else target.port) not in allowed
         ):
             raise ValueError
     except ValueError as exc:
@@ -42,14 +41,8 @@ async def acquire_by_cas_login(cas_token: CasToken) -> AiToken:
         for _ in range(10):
             target = _target(current)
             # 其他域只使用 HTTP CookieJar 匹配的 Cookie，CAS 始终使用原始凭据。
-            headers = (
-                {"Cookie": cas_token.cookie}
-                if target.hostname == "cas.hnu.edu.cn"
-                else {}
-            )
-            response = await request(
-                client, "GET", current, login=True, headers=headers
-            )
+            headers = {"Cookie": cas_token.cookie} if target.hostname == "cas.hnu.edu.cn" else {}
+            response = await request(client, "GET", current, login=True, headers=headers)
             if response.status_code in (302, 303):
                 location = response.headers.get("location")
                 if not location:
@@ -72,9 +65,7 @@ async def acquire_by_cas_login(cas_token: CasToken) -> AiToken:
         else:
             raise AiLoginError("OAuth 跳转次数超过限制")
 
-        response = await request(
-            client, "POST", OAUTH_LOGIN_URL, login=True, json={"code": code}
-        )
+        response = await request(client, "POST", OAUTH_LOGIN_URL, login=True, json={"code": code})
         if response.is_redirect:
             raise AiLoginError("OAuth 换取令牌时发生跳转")
         bearer = bearer_token(response.text)

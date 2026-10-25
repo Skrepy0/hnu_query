@@ -43,10 +43,7 @@ async def test_unqualified_account_decodes_message(cas_token):
     respx.get(TICKET).respond(302, headers={"location": REDIRECT})
     respx.get(BASE_URL + REDIRECT).respond(
         302,
-        headers={
-            "location": "/gmis/(S(test-session))/home/err?msg="
-            + quote("该账号不是研究生")
-        },
+        headers={"location": "/gmis/(S(test-session))/home/err?msg=" + quote("该账号不是研究生")},
     )
     with pytest.raises(YjsxtLoginError) as caught:
         await acquire_by_cas_login(cas_token)

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,7 +28,7 @@ class PersonalInfo(BaseModel):
     level: Level
     academy: str
     major: str
-    class_: str = Field(alias="class")
+    class_: Annotated[str, Field(alias="class")]
     dormitory: Dormitory | None = None
     politic: str | None = None
     race: str | None = None

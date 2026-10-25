@@ -14,8 +14,6 @@ def pt_token():
 @pytest.fixture
 def pt_data():
     def read(name):
-        return json.loads(
-            (Path(__file__).parent / "fixtures" / name).read_text(encoding="utf-8")
-        )
+        return json.loads((Path(__file__).parent / "fixtures" / name).read_text(encoding="utf-8"))
 
     return read

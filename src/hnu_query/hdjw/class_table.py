@@ -16,8 +16,6 @@ async def get_class_table(hdjw_token: HdjwToken, xn: int, xq: int) -> list[Cours
         return await client.get_class_table(xn, xq)
 
 
-async def get_class_table_extra(
-    hdjw_token: HdjwToken, xn: int, xq: int
-) -> list[ExtraCourse]:
+async def get_class_table_extra(hdjw_token: HdjwToken, xn: int, xq: int) -> list[ExtraCourse]:
     async with HdjwClient(hdjw_token) as client:
         return await client.get_class_table_extra(xn, xq)

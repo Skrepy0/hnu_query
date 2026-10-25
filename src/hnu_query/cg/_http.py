@@ -7,9 +7,7 @@ from .exceptions import CgNavigationError, CgNetworkError, CgStatusError, TokenE
 BASE_URL = "https://cg.hnu.edu.cn"
 
 
-async def request(
-    client: httpx.AsyncClient, method: str, url: str, **kwargs
-) -> httpx.Response:
+async def request(client: httpx.AsyncClient, method: str, url: str, **kwargs) -> httpx.Response:
     if url.startswith("/"):
         url = BASE_URL + url
     try:
@@ -38,11 +36,7 @@ def redirect_url(response: httpx.Response) -> str:
         port = parsed.port
     except ValueError as exc:
         raise CgNavigationError("CG 跳转地址格式错误") from exc
-    if (
-        parsed.hostname != "cg.hnu.edu.cn"
-        or parsed.scheme != "https"
-        or port not in (None, 443)
-    ):
+    if parsed.hostname != "cg.hnu.edu.cn" or parsed.scheme != "https" or port not in (None, 443):
         raise CgNavigationError("CG 跳转目标不属于平台 HTTPS 站点")
     return target
 

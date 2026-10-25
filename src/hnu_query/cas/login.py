@@ -19,10 +19,7 @@ from .tfa import TFAToken
 from .token import CasToken
 
 PUBKEY_URL = "http://cas.hnu.edu.cn/cas/v2/getPubKey"
-SERVICE_URL = (
-    "http://cas.hnu.edu.cn/cas/login"
-    "?service=http://cas.hnu.edu.cn/system/login/login.zf"
-)
+SERVICE_URL = "http://cas.hnu.edu.cn/cas/login?service=http://cas.hnu.edu.cn/system/login/login.zf"
 PASSWORD_SHOULD_CHANGE_PAT = "cas.hnu.edu.cn/securitycenter/modifyPwd/index.zf"
 
 _EXECUTION_RE = re.compile(r'name="execution" value="(.*?)"')

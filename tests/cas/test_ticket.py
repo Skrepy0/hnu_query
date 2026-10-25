@@ -2,7 +2,7 @@ import httpx
 import pytest
 import respx
 
-from hnu_query.cas import get_ticket_url, extract_ticket
+from hnu_query.cas import extract_ticket, get_ticket_url
 from hnu_query.cas.exceptions import (
     CasNetworkError,
     CasStatusError,
@@ -15,6 +15,7 @@ TICKET_URL = "https://ca.hnu.edu.cn/student/?ticket=ST-abc-123"
 
 
 # ---------- extract_ticket ----------
+
 
 def test_extract_ticket_simple():
     assert extract_ticket("https://x/y?ticket=ST-abc") == "ST-abc"
@@ -31,6 +32,7 @@ def test_extract_ticket_missing():
 
 
 # ---------- get_ticket_url ----------
+
 
 @pytest.mark.asyncio
 @respx.mock
@@ -50,9 +52,7 @@ async def test_get_ticket_url_success(cas_token):
 @respx.mock
 async def test_get_ticket_url_session_expired_200(cas_token):
     """200 表示 CAS 会话失效（返回登录页而不是 302）。"""
-    respx.get(CA_URL).mock(
-        return_value=httpx.Response(200, text="<html>login</html>")
-    )
+    respx.get(CA_URL).mock(return_value=httpx.Response(200, text="<html>login</html>"))
 
     with pytest.raises(TokenExpired):
         await get_ticket_url(cas_token, CA_URL)
@@ -62,9 +62,7 @@ async def test_get_ticket_url_session_expired_200(cas_token):
 @respx.mock
 async def test_get_ticket_url_session_expired_401(cas_token):
     """4xx 也视为会话失效（Rust 的保守策略）。"""
-    respx.get(CA_URL).mock(
-        return_value=httpx.Response(401, text="Unauthorized")
-    )
+    respx.get(CA_URL).mock(return_value=httpx.Response(401, text="Unauthorized"))
 
     with pytest.raises(TokenExpired):
         await get_ticket_url(cas_token, CA_URL)
@@ -74,9 +72,7 @@ async def test_get_ticket_url_session_expired_401(cas_token):
 @respx.mock
 async def test_get_ticket_url_session_expired_500(cas_token):
     """5xx 同样视为会话失效。"""
-    respx.get(CA_URL).mock(
-        return_value=httpx.Response(500, text="Server Error")
-    )
+    respx.get(CA_URL).mock(return_value=httpx.Response(500, text="Server Error"))
 
     with pytest.raises(TokenExpired):
         await get_ticket_url(cas_token, CA_URL)
@@ -86,9 +82,7 @@ async def test_get_ticket_url_session_expired_500(cas_token):
 @respx.mock
 async def test_get_ticket_url_no_location(cas_token):
     """302 但没有 Location → CasStatusError。"""
-    respx.get(CA_URL).mock(
-        return_value=httpx.Response(302)
-    )
+    respx.get(CA_URL).mock(return_value=httpx.Response(302))
 
     with pytest.raises(CasStatusError):
         await get_ticket_url(cas_token, CA_URL)

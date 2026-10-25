@@ -2,7 +2,7 @@ import httpx
 import pytest
 import respx
 
-from hnu_query.cas import TFAToken, CasToken
+from hnu_query.cas import CasToken, TFAToken
 from hnu_query.cas.exceptions import CasNetworkError, CasStatusError
 
 CAS_BASE = "https://cas.hnu.edu.cn"
@@ -30,6 +30,7 @@ def tfa_token():
 
 # ---------- from_html ----------
 
+
 def test_tfa_from_html_success():
     token = TFAToken.from_html(TFA_HTML, "cookie-x", "20210001", "pwd")
     assert token.phone == "13800138000"
@@ -40,18 +41,21 @@ def test_tfa_from_html_success():
 
 def test_tfa_from_html_no_execution():
     from hnu_query.cas.exceptions import CasLoginError
+
     with pytest.raises(CasLoginError, match="execution"):
         TFAToken.from_html("<html></html>", "c", "s", "p")
 
 
 def test_tfa_from_html_no_phone():
     from hnu_query.cas.exceptions import CasLoginError
+
     html = '<input type="hidden" name="execution" value="x"/>'
     with pytest.raises(CasLoginError, match="手机号"):
         TFAToken.from_html(html, "c", "s", "p")
 
 
 # ---------- send_sms ----------
+
 
 @pytest.mark.asyncio
 @respx.mock
@@ -92,6 +96,7 @@ async def test_send_sms_status_error(tfa_token):
 
 # ---------- verify ----------
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_verify_success(tfa_token):
@@ -124,9 +129,7 @@ async def test_verify_code_error(tfa_token):
       <input type="hidden" name="execution" value="new-exec-abc"/>
     </html>
     """
-    respx.post(LOGIN_URL).mock(
-        return_value=httpx.Response(200, text=error_html)
-    )
+    respx.post(LOGIN_URL).mock(return_value=httpx.Response(200, text=error_html))
 
     status, value = await tfa_token.verify("000000")
     assert status == "code_error"
@@ -138,9 +141,7 @@ async def test_verify_code_error(tfa_token):
 @respx.mock
 async def test_verify_expired(tfa_token):
     """200 但页面不是验证码错误 → TFA 令牌过期。"""
-    respx.post(LOGIN_URL).mock(
-        return_value=httpx.Response(200, text="<html>其他错误</html>")
-    )
+    respx.post(LOGIN_URL).mock(return_value=httpx.Response(200, text="<html>其他错误</html>"))
 
     status, value = await tfa_token.verify("123456")
     assert status == "expired"

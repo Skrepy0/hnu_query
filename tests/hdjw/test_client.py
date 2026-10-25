@@ -53,17 +53,13 @@ from hnu_query.hdjw.client import BASE_URL
     ],
 )
 @respx.mock
-async def test_public_gets(
-    hdjw_token, fixture_text, method, path, fixture, args, expected_query
-):
+async def test_public_gets(hdjw_token, fixture_text, method, path, fixture, args, expected_query):
     route = respx.get(BASE_URL + path).respond(200, text=fixture_text(fixture))
     result = await getattr(hdjw, method)(hdjw_token, *args)
     assert result
     request = route.calls.last.request
     assert request.headers["cookie"] == "JSESSIONID=hdjw-test"
-    assert all(
-        request.url.params[key] == value for key, value in expected_query.items()
-    )
+    assert all(request.url.params[key] == value for key, value in expected_query.items())
 
 
 @respx.mock
@@ -79,9 +75,7 @@ async def test_rank_form(hdjw_token, fixture_text):
         hdjw.DataSource.Execution,
         hdjw.Display.Initial,
     )
-    assert parse_qs(
-        route.calls.last.request.content.decode(), keep_blank_values=True
-    ) == {
+    assert parse_qs(route.calls.last.request.content.decode(), keep_blank_values=True) == {
         "xnxq01id": ["2024-2025-1,2025-2026-2"],
         "kkxz1": [""],
         "pmfs1": [""],
@@ -101,9 +95,7 @@ async def test_empty_classroom_form(hdjw_token, fixture_text):
         200,
         text=fixture_text("jsjy_query2.json"),
     )
-    result = await hdjw.get_empty_classroom(
-        hdjw_token, "building", 0, 4, [1, 2, 3, 4, 5], 2025, 1
-    )
+    result = await hdjw.get_empty_classroom(hdjw_token, "building", 0, 4, [1, 2, 3, 4, 5], 2025, 1)
     assert len(result) == 4
     assert parse_qs(route.calls.last.request.content.decode()) == {
         "xnxqh": ["2025-2026-1"],
@@ -140,9 +132,7 @@ async def test_http_errors(hdjw_token, status, headers, error):
 
 @respx.mock
 async def test_network_error(hdjw_token):
-    respx.get(BASE_URL + "/jsxsd/kscj/cjcx_list").mock(
-        side_effect=httpx.ConnectError("offline")
-    )
+    respx.get(BASE_URL + "/jsxsd/kscj/cjcx_list").mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(hdjw.HdjwNetworkError):
         await hdjw.get_grade(hdjw_token, 2025, 1)
 

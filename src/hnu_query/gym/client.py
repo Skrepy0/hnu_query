@@ -11,9 +11,7 @@ from .token import GymToken
 class GymClient:
     """复用连接的异步客户端；调用方注入的 HTTP 客户端由调用方关闭。"""
 
-    def __init__(
-        self, token: GymToken, *, client: httpx.AsyncClient | None = None
-    ) -> None:
+    def __init__(self, token: GymToken, *, client: httpx.AsyncClient | None = None) -> None:
         self._token = token
         self._client = client if client is not None else httpx.AsyncClient(timeout=30.0)
         self._owns_client = client is None

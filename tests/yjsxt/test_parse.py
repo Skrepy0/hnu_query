@@ -6,7 +6,10 @@ from hnu_query.yjsxt import YjsxtParseError, parse
 
 
 def cell(id="1001", teacher="教师甲", weeks="1-2", suffix="连续周", place="教学楼101"):
-    return f"<br/>课程编号:{id}<br/>课程名称: 示例 课程 <br/>班级:示例 班<br/>上课时间:[{weeks}周] {suffix}<br/>{teacher}[{place}]"
+    return (
+        f"<br/>课程编号:{id}<br/>课程名称: 示例 课程 <br/>班级:示例 班<br/>"
+        f"上课时间:[{weeks}周] {suffix}<br/>{teacher}[{place}]"
+    )
 
 
 def schedule_map(course):
@@ -25,9 +28,7 @@ def test_semester_rust_fixture(yjsxt_text):
     assert result[-1].model_dump() == {"xn": 2004, "xq": 1, "id": "5"}
 
 
-@pytest.mark.parametrize(
-    "name", ["2026", "2026-2027未知学期", "65536-65537秋学期", "x-2027秋学期"]
-)
+@pytest.mark.parametrize("name", ["2026", "2026-2027未知学期", "65536-65537秋学期", "x-2027秋学期"])
 def test_bad_semester_name(name):
     with pytest.raises(YjsxtParseError):
         parse.semester(json.dumps([{"termcode": "63", "termname": name}]))
@@ -74,26 +75,17 @@ def test_multi_phase_rust_fixture(yjsxt_text):
     )
     assert len(phases) == 2
     assert [p.teacher for p in phases] == ["教师辛", "教师未"]
-    assert schedule_map(phases[0]) == {
-        (w, 5, "文科楼101"): [9, 10] for w in range(1, 5)
-    }
-    assert schedule_map(phases[1]) == {
-        (w, 5, "文科楼101"): [9, 10] for w in range(5, 9)
-    }
+    assert schedule_map(phases[0]) == {(w, 5, "文科楼101"): [9, 10] for w in range(1, 5)}
+    assert schedule_map(phases[1]) == {(w, 5, "文科楼101"): [9, 10] for w in range(5, 9)}
 
 
 def test_odd_even_rust_fixture(yjsxt_text):
     result = {
-        course.course_id: course
-        for course in parse.class_table(yjsxt_text("py_kbcx_ew_dsz.json"))
+        course.course_id: course for course in parse.class_table(yjsxt_text("py_kbcx_ew_dsz.json"))
     }
     assert len(result) == 2
-    assert schedule_map(result["1006"]) == {
-        (w, 2, "教学楼106"): [1, 2] for w in range(1, 16, 2)
-    }
-    assert schedule_map(result["1007"]) == {
-        (w, 3, "教学楼107"): [1, 2] for w in range(2, 17, 2)
-    }
+    assert schedule_map(result["1006"]) == {(w, 2, "教学楼106"): [1, 2] for w in range(1, 16, 2)}
+    assert schedule_map(result["1007"]) == {(w, 3, "教学楼107"): [1, 2] for w in range(2, 17, 2)}
 
 
 def test_no_period_deduplicates_and_missing_teacher():
@@ -140,9 +132,7 @@ def test_duplicate_periods_preserved_like_rust():
 
 
 def test_reversed_week_range_matches_rust_empty_schedule():
-    result = parse.class_table(
-        json.dumps({"rows": [{"mc": "1", "z1": cell(weeks="5-1")}]})
-    )
+    result = parse.class_table(json.dumps({"rows": [{"mc": "1", "z1": cell(weeks="5-1")}]}))
     assert result[0].schedule == []
 
 
@@ -167,18 +157,14 @@ def test_unrecognized_course_content_errors(value):
         parse.class_table(json.dumps({"rows": [{"mc": "1", "z1": value}]}))
 
 
-@pytest.mark.parametrize(
-    "mc,value", [(1, None), ("256", cell()), ("invalid", cell()), ("1", 123)]
-)
+@pytest.mark.parametrize("mc,value", [(1, None), ("256", cell()), ("invalid", cell()), ("1", 123)])
 def test_bad_row(mc, value):
     with pytest.raises(YjsxtParseError):
         parse.class_table(json.dumps({"rows": [{"mc": mc, "z1": value}]}))
 
 
 @pytest.mark.parametrize("parser", [parse.semester, parse.class_table])
-@pytest.mark.parametrize(
-    "body", ["<html>login</html>", "null", "{}", '{"rows":[null]}']
-)
+@pytest.mark.parametrize("body", ["<html>login</html>", "null", "{}", '{"rows":[null]}'])
 def test_invalid_response(parser, body):
     with pytest.raises(YjsxtParseError):
         parser(body)

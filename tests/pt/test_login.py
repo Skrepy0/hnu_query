@@ -62,9 +62,7 @@ async def test_expired_cas(cas_token):
 
 @respx.mock
 async def test_unexpected_callback(cas_token):
-    respx.get(PT_URL).respond(
-        302, headers={"location": "https://example.org/?ticket=ST-test"}
-    )
+    respx.get(PT_URL).respond(302, headers={"location": "https://example.org/?ticket=ST-test"})
     with pytest.raises(PtLoginError):
         await acquire_by_cas_login(cas_token)
     assert len(respx.calls) == 1

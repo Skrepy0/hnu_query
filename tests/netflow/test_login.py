@@ -62,9 +62,7 @@ async def test_login_get_body_and_selected_cookies(cas_token, status):
 @respx.mock
 async def test_single_cookie_preserves_rust_behavior(cas_token):
     cas_redirect()
-    respx.get(BASE_URL + "/login/validate").respond(
-        200, headers={"set-cookie": "session=one"}
-    )
+    respx.get(BASE_URL + "/login/validate").respond(200, headers={"set-cookie": "session=one"})
     token = await acquire_by_cas_login(cas_token)
     assert token.headers["Cookie"] == "session=one; session=one"
 
@@ -96,8 +94,6 @@ async def test_login_http_error(cas_token):
 @respx.mock
 async def test_login_network_error(cas_token):
     cas_redirect()
-    respx.get(BASE_URL + "/login/validate").mock(
-        side_effect=httpx.ConnectError("offline")
-    )
+    respx.get(BASE_URL + "/login/validate").mock(side_effect=httpx.ConnectError("offline"))
     with pytest.raises(NetflowNetworkError):
         await acquire_by_cas_login(cas_token)
