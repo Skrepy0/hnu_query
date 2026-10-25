@@ -17,8 +17,8 @@ Python 包位于 `src/hnu_query`，按学校系统划分模块。
 | `uv.lock` | uv 依赖锁文件 |
 | `.env.example` | 真实请求测试的环境变量模板 |
 
-开发环境和检查命令见 [测试](test.md)。运行时使用 `pip install -e .` 仅安装库依赖；
-参与开发时使用 `uv sync` 安装默认开发依赖组。
+用户安装使用 `pip install hnu_query`。参与开发时使用 `uv sync` 安装开发依赖，
+检查命令见 [测试](test.md)。
 
 ## 模块内的常见文件
 

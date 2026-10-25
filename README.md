@@ -6,10 +6,10 @@
 
 ## 安装
 
-需要 Python 3.10+，在项目根目录执行：
+需要 Python 3.10+：
 
 ```bash
-pip install -e .
+pip install hnu_query
 ```
 
 真实查询需连接湖南大学校园网或 VPN，并拥有相应系统权限。
