@@ -17,7 +17,8 @@ async with IPortalClient(token) as client:
 ```
 
 `get_term_info()` 接受不带时区的 `datetime`，并按 UTC 解释。
-校园卡余额以元返回，交易记录的 `transaction_amount` 保留整数分。
+校园卡余额以元返回。交易记录的 `transaction_name` 是平台原始交易名称，
+`transaction_amount` 为带正负号的整数分，`card_balance` 是记录中的卡余额快照，单位为分；代扣时该快照可能不变化。
 `MoneyTransfer` 为同步转账记录，统计消费时需按业务含义过滤。
 
 交易记录使用 `get_card_transaction_records`，其分页参数顺序为 `page_size, page`；

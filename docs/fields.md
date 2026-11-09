@@ -22,6 +22,7 @@
 | `pt` 校园卡余额、交易金额和交易后余额 | 元 |
 | `iportal` 校园卡余额 | 元 |
 | `iportal.transaction_amount` | 带正负号的整数分 |
+| `iportal.card_balance` | 交易记录中的卡余额快照，整数分；代扣时可能不变化 |
 | `netflow` 日/月明细流量 | KB |
 | `netflow` 账单下载/上传量 | 字节 |
 | `netflow` 账单超额量、套餐量 | GB |
