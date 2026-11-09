@@ -165,10 +165,12 @@ def test_card_rust_fixtures(iportal_text):
     result = parse.card_transaction_records(iportal_text("card/transactions.json"))
     assert result.has_next_page and result.total_count == 11 and len(result.records) == 10
     assert result.records[0].model_dump() == {
+        "transaction_name": "持卡人消费",
         "merchant_name": "天马二食堂二楼",
         "merchant_account": 1000006,
         "pay_time": datetime(2026, 9, 13, 11, 47, 30),
         "transaction_amount": -200,
+        "card_balance": 8181,
         "transaction_type": TransactionType.Consumption,
     }
 
@@ -200,6 +202,8 @@ def test_transaction_codes(iportal_data, code, expected):
         ("mercacc", "-1"),
         ("mercacc", str(2**64)),
         ("sign_tranamt", str(2**63)),
+        ("cardbal", str(2**63)),
+        ("cardbal", "invalid"),
         ("occtime", "20260230120000"),
     ],
 )

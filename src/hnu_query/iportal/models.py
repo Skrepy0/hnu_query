@@ -65,10 +65,12 @@ class TransactionType(str, Enum):
 class TransactionRecord(BaseModel):
     """交易金额为整数分；MoneyTransfer 只是余额同步，不是额外收支。"""
 
+    transaction_name: str
     merchant_name: str
     merchant_account: int
     pay_time: datetime
     transaction_amount: int
+    card_balance: int
     transaction_type: TransactionType
 
 

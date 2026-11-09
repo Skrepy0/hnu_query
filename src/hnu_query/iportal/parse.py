@@ -75,10 +75,12 @@ class _Card(_Raw):
 
 
 class _Transaction(_Raw):
+    tranname: str
     mercname: str
     mercacc: str
     occtime: str
     sign_tranamt: str
+    cardbal: str
     trancode: str
 
 
@@ -309,10 +311,12 @@ def card_transaction_records(body: str) -> CardTransactionDetail:
             raise IPortalParseError("校园卡交易时间必须为 14 位数字")
         records.append(
             TransactionRecord(
+                transaction_name=raw.tranname,
                 merchant_name=raw.mercname,
                 merchant_account=_integer(raw.mercacc, 0, 2**64 - 1),
                 pay_time=_datetime(raw.occtime, "%Y%m%d%H%M%S"),
                 transaction_amount=_integer(raw.sign_tranamt, -(2**63), 2**63 - 1),
+                card_balance=_integer(raw.cardbal, -(2**63), 2**63 - 1),
                 transaction_type=types[code],
             )
         )
