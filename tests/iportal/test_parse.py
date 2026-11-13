@@ -175,10 +175,35 @@ def test_card_rust_fixtures(iportal_text):
     }
 
 
+def test_card_transaction_records_skip_card_management(iportal_data):
+    data = iportal_data("card/transactions.json")
+    management_codes = ["03", "41", "42", "43", "44", "5K"]
+    data["d"]["rowcount"] = "7"
+    data["d"]["nextpage"] = "0"
+    management = [
+        {
+            "trancode": code,
+            "tranname": "卡片管理",
+            "mercacc": "0",
+            "mercname": "",
+            "sign_tranamt": "0",
+            "cardbal": "0",
+            "occtime": "20261101000000",
+        }
+        for code in management_codes
+    ]
+    data["d"]["total"] = management + [data["d"]["total"][0]]
+
+    result = parse.card_transaction_records(json.dumps(data))
+
+    assert result.total_count == 7
+    assert len(result.records) == 1
+    assert result.records[0].transaction_type is TransactionType.Consumption
+
+
 @pytest.mark.parametrize(
     "code,expected",
     [
-        (15, TransactionType.Consumption),
         (16, TransactionType.Recharge),
         (17, TransactionType.Benefit),
         (22, TransactionType.MoneyTransfer),

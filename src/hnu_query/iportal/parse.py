@@ -292,19 +292,24 @@ def card_transaction_records(body: str) -> CardTransactionDetail:
     next_page = _integer(_field(data, "nextpage", str), 0, 2**32 - 1)
     count = _integer(_field(data, "rowcount", str), 0, 2**32 - 1)
     types = {
-        15: TransactionType.Consumption,
-        16: TransactionType.Recharge,
-        17: TransactionType.Benefit,
-        22: TransactionType.MoneyTransfer,
-        6: TransactionType.EAccountOpening,
-        1: TransactionType.HolderAccountOpening,
-        99: TransactionType.QRCodeConsumption,
-        27: TransactionType.Withholding,
+        "15": TransactionType.Consumption,
+        "16": TransactionType.Recharge,
+        "17": TransactionType.Benefit,
+        "22": TransactionType.MoneyTransfer,
+        "6": TransactionType.EAccountOpening,
+        "1": TransactionType.HolderAccountOpening,
+        "99": TransactionType.QRCodeConsumption,
+        "27": TransactionType.Withholding,
     }
+    management_codes = {"03", "41", "42", "43", "44", "5K"}
     records = []
     for item in _field(data, "total", list):
+        code = item.get("trancode") if isinstance(item, dict) else None
+        if not isinstance(code, str):
+            raise IPortalParseError("校园卡交易类型代码必须为字符串")
+        if code in management_codes:
+            continue
         raw = _validate(_Transaction, item)
-        code = _integer(raw.trancode, 0, 2**32 - 1)
         if code not in types:
             raise IPortalParseError("未知校园卡交易类型")
         if not re.fullmatch(r"[0-9]{14}", raw.occtime):

@@ -20,6 +20,8 @@ async with IPortalClient(token) as client:
 校园卡余额以元返回。交易记录的 `transaction_name` 是平台原始交易名称，
 `transaction_amount` 为带正负号的整数分，`card_balance` 是记录中的卡余额快照，单位为分；代扣时该快照可能不变化。
 `MoneyTransfer` 为同步转账记录，统计消费时需按业务含义过滤。
+校园卡挂失、解挂、冻结、换卡、持卡人信息变更及卡片校正等管理操作不会作为交易记录返回，
+对应交易码为 `03`、`41`、`42`、`43`、`44`、`5K`；因此 `total_count` 可能大于 `records` 的长度。
 
 交易记录使用 `get_card_transaction_records`，其分页参数顺序为 `page_size, page`；
 申请记录 `get_apply_list` 的顺序为 `page, page_size`。
