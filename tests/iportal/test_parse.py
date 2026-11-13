@@ -204,6 +204,7 @@ def test_card_transaction_records_skip_card_management(iportal_data):
 @pytest.mark.parametrize(
     "code,expected",
     [
+        (15, TransactionType.Consumption),
         (16, TransactionType.Recharge),
         (17, TransactionType.Benefit),
         (22, TransactionType.MoneyTransfer),
