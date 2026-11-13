@@ -13,6 +13,7 @@ from .exceptions import (
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
+    PhoneNotBound,
     TFARequired,
 )
 from .tfa import TFAToken
@@ -42,6 +43,7 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
         PasswordError: 密码错误。
         PasswordShouldChange: 需要前往个人门户修改密码。
         AccountLocked: 账号被锁定。
+        PhoneNotBound: 手机号未绑定，无法进行双因子认证。
         TFARequired: 需要双因子认证（异常携带 TFAToken）。
     """
     async with httpx.AsyncClient(
@@ -125,6 +127,9 @@ async def acquire_by_login(stu_id: str, password: str) -> CasToken:
         # ⑥ 判断登录结果
         if "用户名或密码错误" in login_result:
             raise PasswordError("密码错误")
+
+        if "手机号未绑定" in login_result:
+            raise PhoneNotBound("手机号未绑定，无法进行双因子认证")
 
         if "双因子认证" in login_result:
             tfa = TFAToken.from_html(

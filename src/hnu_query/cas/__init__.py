@@ -10,6 +10,7 @@ from .exceptions import (
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
+    PhoneNotBound,
     TFARequired,
     TokenExpired,
 )
@@ -35,5 +36,6 @@ __all__ = [
     "PasswordError",
     "PasswordShouldChange",
     "AccountLocked",
+    "PhoneNotBound",
     "TFARequired",
 ]

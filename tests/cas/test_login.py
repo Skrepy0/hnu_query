@@ -10,6 +10,7 @@ from hnu_query.cas.exceptions import (
     CasStatusError,
     PasswordError,
     PasswordShouldChange,
+    PhoneNotBound,
     TFARequired,
 )
 from tests.conftest import PUBKEY_URL, SERVICE_URL
@@ -113,6 +114,17 @@ async def test_login_password_should_change():
     )
 
     with pytest.raises(PasswordShouldChange):
+        await acquire_by_login("20210001", "password")
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_login_phone_not_bound():
+    respx.get(SERVICE_URL).mock(return_value=httpx.Response(200, text=LOGIN_HTML))
+    respx.get(PUBKEY_URL).mock(return_value=httpx.Response(200, text=PUBKEY_JSON))
+    respx.post(SERVICE_URL).mock(return_value=httpx.Response(200, text="<html>手机号未绑定</html>"))
+
+    with pytest.raises(PhoneNotBound):
         await acquire_by_login("20210001", "password")
 
 

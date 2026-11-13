@@ -51,6 +51,7 @@ HTTP 错误抛异常，不作为验证成功返回。
 | --- | --- |
 | `PasswordError` | 用户名或密码错误 |
 | `AccountLocked` | 账号因多次失败被锁定 |
+| `PhoneNotBound` | 手机号未绑定，无法进行双因子验证 |
 | `PasswordShouldChange` | 需要先在个人门户修改密码 |
 | `TFARequired` | 需要双因子验证 |
 | `CasNetworkError` | 网络请求失败 |

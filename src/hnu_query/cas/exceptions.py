@@ -49,6 +49,10 @@ class AccountLocked(AccountIssue):
     """账号因多次输错密码被锁定。"""
 
 
+class PhoneNotBound(AccountIssue):
+    """手机号未绑定，无法进行双因子认证。"""
+
+
 class TFARequired(AccountIssue):
     """需要双因子认证。
 
